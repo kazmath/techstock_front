@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
-import 'pages/app.dart';
+import 'pages/login.dart';
+import 'pages/usuario_home.dart';
+import 'tools/constants.dart';
 
 void main() {
   runApp(
@@ -110,12 +112,18 @@ void main() {
         useMaterial3: true,
       ),
       themeMode: ThemeMode.light, // TODO: dark theme
+
+      initialRoute: Constants.baseHref,
       onGenerateRoute: (settings) {
-        return switch (settings.name) {
-          Home.routeName || _ => MaterialPageRoute(
-              builder: (context) => const Home(),
-            ),
-        };
+        if (settings.name == UsuarioHome.routeName) {
+          return MaterialPageRoute(
+            builder: (context) => const UsuarioHome(),
+          );
+        }
+
+        return MaterialPageRoute(
+          builder: (context) => const LoginScreen(),
+        );
       },
     ),
   );

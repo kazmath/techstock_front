@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 
+import '../service/usuario_service.dart';
 import 'constants.dart';
 import 'exceptions.dart';
 
@@ -72,23 +73,27 @@ Future<http.Response> apiRequest(
   dynamic body,
   Map<String, String>? headers,
   String method = 'post',
-  String? token,
-  int? empresaAtual,
-  bool doUpdateUserData = true,
+  bool useToken = true,
 }) async {
+  headers ??= {
+    'Content-Type': 'application/json',
+  };
+
   late http.Response response;
 
   try {
     String? bodyString;
 
     if (body != null) {
-      switch (body.runtimeType) {
-        case const (List) || const (Map<String, dynamic>):
-          bodyString = jsonify(body);
-          break;
-        default:
-          throw ServiceException("Corpo do request inválido");
+      if (body is Map<String, dynamic> || body is List) {
+        bodyString = jsonify(body);
+      } else {
+        throw ServiceException("Corpo do request inválido");
       }
+    }
+
+    if (useToken) {
+      headers['Authorization'] = "Bearer ${await UsuarioService.token}";
     }
 
     response = switch (method.toLowerCase()) {
@@ -133,7 +138,7 @@ Future<http.Response> apiRequest(
 
   printHttpTransaction(response);
 
-  if (response.statusCode == 401) {
+  if (response.statusCode == 403) {
     throw ApiException.message("Credenciais não autorizadas");
   }
 
@@ -222,7 +227,7 @@ void printHttpTransaction(
   } catch (_) {}
 }
 
-(T, List<String>) destructureResponse<T>(http.Response response) {
+(dynamic, List<String>) destructureResponse<T>(http.Response response) {
   Map<String, dynamic> responseBody;
   try {
     responseBody = jsonDecode(
@@ -239,7 +244,8 @@ void printHttpTransaction(
 
   var data;
   if (responseBody["data"] is List) {
-    data = List.castFrom<dynamic, T>(responseBody["data"]).toList();
+    var dataList = responseBody["data"];
+    data = List.castFrom<dynamic, T>(dataList).toList();
   } else {
     data = responseBody["data"];
   }
