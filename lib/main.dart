@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import 'pages/login.dart';
-import 'pages/usuario_home.dart';
 import 'tools/constants.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+
   runApp(
     MaterialApp(
       title: 'Flutter Demo',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
+        textTheme: GoogleFonts.getTextTheme('Rubik'),
         colorScheme: const ColorScheme(
           brightness: Brightness.light,
           primary: Color(0xff475d92),
@@ -115,10 +118,12 @@ void main() {
 
       initialRoute: Constants.baseHref,
       onGenerateRoute: (settings) {
-        if (settings.name == UsuarioHome.routeName) {
-          return MaterialPageRoute(
-            builder: (context) => const UsuarioHome(),
-          );
+        for (var element in Constants.telas) {
+          if (settings.name == element['route']) {
+            return MaterialPageRoute(
+              builder: (context) => element['widget'] ?? const Placeholder(),
+            );
+          }
         }
 
         return MaterialPageRoute(

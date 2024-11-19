@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:techstock_front/pages/dashboard.dart';
+import 'package:techstock_front/pages/tickets_usuario_db.dart';
 
 import '../service/usuario_service.dart';
 import '../tools/constants.dart';
 import '../tools/exceptions.dart';
 import '../tools/utils.dart';
-import 'usuario_home.dart';
 import 'widgets.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -21,14 +22,14 @@ class _LoginScreenState extends State<LoginScreen> {
   final senhaController = TextEditingController();
   bool isCheckingLogin = true;
 
+  var showPassword = false;
+
   @override
   void initState() {
     super.initState();
-    UsuarioService.token.then((token) {
-      if (token == null) {
-        setState(() {
-          isCheckingLogin = false;
-        });
+    UsuarioService.usuario.then((usuario) {
+      if (usuario == null) {
+        setState(() => isCheckingLogin = false);
         return;
       }
       loginSucess();
@@ -55,7 +56,17 @@ class _LoginScreenState extends State<LoginScreen> {
                 stacktrace: snapshot.stackTrace!,
               );
             }
-            loginSucess();
+
+            if (snapshot.data ?? false) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                loginSucess();
+              });
+            } else {
+              return const AlertOkDialog(
+                title: Text("Erro"),
+                content: Text("Falha no login"),
+              );
+            }
             return Container();
           }
 
@@ -65,40 +76,33 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Future<void> onSubmit() async {
+  Future<bool> onSubmit() async {
     var email = emailController.text;
     var senha = senhaController.text;
 
     var loginResult = false;
-    try {
-      loginResult = await UsuarioService().login(
-        email: email,
-        senha: senha,
-      );
-    } on ServiceException catch (e) {
-      showDialog(
-        context: context,
-        builder: (context) => AlertOkDialog(
-          title: const Text("Erro"),
-          content: Text(e.cause),
-        ),
-      );
-    }
+    loginResult = await UsuarioService().login(
+      email: email,
+      senha: senha,
+    );
 
-    if (loginResult) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        loginSucess();
-      });
-    }
+    return loginResult;
   }
 
   void loginSucess() {
     WidgetsBinding.instance.addPostFrameCallback(
-      (_) => Navigator.pushNamedAndRemoveUntil(
-        context,
-        UsuarioHome.routeName,
-        (_) => false,
-      ),
+      (_) async {
+        var usuario = await UsuarioService.usuario;
+        var permissions = usuario!.permissions;
+
+        Navigator.pushNamedAndRemoveUntil(
+          context,
+          permissions!.contains("ROLE_ADMIN")
+              ? Dashboard.routeName
+              : TicketsUsuario.routeName,
+          (_) => false,
+        );
+      },
     );
   }
 
@@ -181,7 +185,18 @@ class _LoginScreenState extends State<LoginScreen> {
                           controller: senhaController,
                           textInputAction: TextInputAction.send,
                           onFieldSubmitted: (_) => onSubmitDialog(),
-                          decoration: getInputDecoration("Senha", Icons.lock),
+                          obscureText: !showPassword,
+                          decoration:
+                              getInputDecoration("Senha", Icons.lock).copyWith(
+                            suffixIcon: IconButton(
+                              onPressed: () => setState(
+                                () => showPassword = !showPassword,
+                              ),
+                              icon: showPassword
+                                  ? Icon(Icons.visibility_off_outlined)
+                                  : Icon(Icons.visibility_outlined),
+                            ),
+                          ),
                         ),
                         FilledButton(
                           onPressed: onSubmitDialog,

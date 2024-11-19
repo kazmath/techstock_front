@@ -1,3 +1,8 @@
+import 'package:flutter/material.dart';
+import 'package:techstock_front/pages/dashboard.dart';
+import 'package:techstock_front/pages/tickets_usuario_db.dart';
+import 'package:techstock_front/pages/usuarios_db.dart';
+
 import 'ui_web_stub.dart' // Stub implementation
     if (dart.library.html) 'dart:ui_web'; // dart:html implementation
 
@@ -20,4 +25,28 @@ class Constants {
 
   static String get baseHrefStripped =>
       baseHref.replaceFirst(RegExp(r'/$'), '');
+
+  static List<Map<String, dynamic>> get telas => [
+        {
+          'title': "Dashboard",
+          'route': Dashboard.routeName,
+          'widget': const Dashboard(),
+          'icon': Icons.home_outlined,
+          'role': 'ROLE_ADMIN',
+        },
+        {
+          'title': "Usuarios",
+          'route': Usuarios.routeName,
+          'widget': const Usuarios(),
+          'icon': Icons.person_outlined,
+          'role': 'ROLE_ADMIN',
+        },
+        {
+          'title': "Reservas", // Usuário
+          'route': TicketsUsuario.routeName,
+          'widget': const TicketsUsuario(),
+          'icon': Icons.confirmation_num_outlined,
+          'role': 'ROLE_USER',
+        },
+      ];
 }

@@ -1,28 +1,25 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:pluto_grid/pluto_grid.dart';
+import 'package:techstock_front/service/ticket_service.dart';
+import 'package:techstock_front/tools/constants.dart';
 
 import '../service/service.dart';
 import '../service/usuario_service.dart';
 import '../tools/exceptions.dart';
 import '../tools/utils.dart';
-import 'login.dart';
 
-class BaseApp extends StatefulWidget {
+class BaseApp extends StatelessWidget {
   const BaseApp({
     super.key,
-    this.title,
+    required this.title,
     required this.child,
+    this.titleActions,
   });
 
-  final Widget? title;
+  final String title;
+  final List<Widget>? titleActions;
   final Widget child;
 
-  @override
-  State<BaseApp> createState() => _BaseAppState();
-}
-
-class _BaseAppState extends State<BaseApp> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -39,7 +36,7 @@ class _BaseAppState extends State<BaseApp> {
             mainAxisSize: MainAxisSize.max,
             // mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              Expanded(child: widget.title ?? Container()),
+              Expanded(child: Text(title)),
               IconButton(
                 onPressed: () {},
                 icon: const Icon(Icons.notifications),
@@ -55,19 +52,63 @@ class _BaseAppState extends State<BaseApp> {
       ),
       drawer: GlobalDrawer(),
       backgroundColor: const Color(0xFFD6D6D6),
-      body: Container(
-        margin: const EdgeInsets.all(20.0),
-        decoration: BoxDecoration(
-          color: const Color(0xFFFFFFFF),
-          borderRadius: BorderRadius.circular(20.0),
-        ),
-        child: ConstrainedBox(
-          constraints: BoxConstraints.expand(
-            width: MediaQuery.of(context).size.width - 20.0,
-          ),
-          child: widget.child,
-        ),
-      ),
+      body: FutureBuilder(
+          future: TicketService().listar(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState != ConnectionState.done) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (snapshot.hasError) {
+              UsuarioService().logout().then((_) => returnToLogin(context));
+              return Container();
+            }
+
+            return Container(
+              margin: const EdgeInsets.all(20.0),
+              padding: const EdgeInsets.all(30.0),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFFFFF),
+                borderRadius: BorderRadius.circular(20.0),
+              ),
+              child: ConstrainedBox(
+                constraints: BoxConstraints.expand(
+                  width: MediaQuery.of(context).size.width - 20.0,
+                ),
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisSize: MainAxisSize.max,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            title,
+                            style: Theme.of(context)
+                                .textTheme
+                                .displayLarge!
+                                .copyWith(
+                                    color: getColorScheme(context).secondary),
+                          ),
+                        ),
+                        if (titleActions != null)
+                          Expanded(
+                            child: SizedBox(
+                              height: 42,
+                              child: Row(
+                                children: titleActions!,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                    const Divider(height: 25.0),
+                    Expanded(
+                      child: child,
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }),
     );
   }
 }
@@ -80,66 +121,155 @@ class GlobalDrawer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Drawer(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const Spacer(),
-          const Divider(),
-          Padding(
-            padding: const EdgeInsets.all(10.0).copyWith(bottom: 30.0),
-            child: FilledButton.icon(
-              onPressed: () => showDialog(
-                context: context,
-                barrierDismissible: false,
-                builder: (context) => FutureBuilder(
-                  future: UsuarioService().logout(),
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.done) {
-                      if (snapshot.hasError) {
-                        var error = snapshot.error;
-                        if (error is ServiceException) {
-                          return AlertOkDialog(
-                            title: const Text("Erro"),
-                            content: Text(error.cause),
+      child: Padding(
+        padding: const EdgeInsets.all(15.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Image.asset('assets/images/image.png'),
+            FutureBuilder(
+              future: UsuarioService.usuario,
+              builder: (context, snapshot) {
+                return Column(
+                  children: [
+                    const Divider(color: Colors.transparent),
+                    Text(
+                      snapshot.data?.email ?? "-",
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    const Divider(color: Colors.transparent),
+                    Text(
+                      snapshot.data?.codigo ?? "-",
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    const Divider(color: Colors.transparent),
+                  ],
+                );
+              },
+            ),
+            const Divider(),
+            Expanded(
+              child: SingleChildScrollView(
+                child: FutureBuilder(
+                    future: UsuarioService.usuario,
+                    builder: (context, snapshot) {
+                      return Column(
+                        children: Constants.telas
+                            .where(
+                              (element) {
+                                if (snapshot.data == null) return false;
+
+                                var usuario = snapshot.data!;
+
+                                if (usuario.permissions!
+                                    .contains('ROLE_ADMIN')) {
+                                  return element['role'] == 'ROLE_ADMIN';
+                                }
+
+                                return element['role'] == 'ROLE_USER';
+                              },
+                            )
+                            .map(
+                              (e) => Builder(
+                                builder: (context) {
+                                  var hovering = false;
+                                  return StatefulBuilder(
+                                    builder: (context, setState) {
+                                      return MouseRegion(
+                                        onEnter: (event) =>
+                                            setState(() => hovering = true),
+                                        onExit: (event) =>
+                                            setState(() => hovering = false),
+                                        child: ListTile(
+                                          title: Text(
+                                            e['title'],
+                                            style: TextStyle(
+                                              color: hovering
+                                                  ? getColorScheme(context)
+                                                      .onPrimary
+                                                  : getColorScheme(context)
+                                                      .onSurface,
+                                            ),
+                                          ),
+                                          leading: Icon(
+                                            e['icon'],
+                                            color: hovering
+                                                ? getColorScheme(context)
+                                                    .onPrimary
+                                                : getColorScheme(context)
+                                                    .onSurface,
+                                          ),
+                                          style: ListTileStyle.drawer,
+                                          hoverColor: hovering
+                                              ? getColorScheme(context).primary
+                                              : getColorScheme(context).surface,
+                                          onTap: () => Navigator.pushNamed(
+                                            context,
+                                            e['route'],
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  );
+                                },
+                              ),
+                            )
+                            .toList(),
+                      );
+                    }),
+              ),
+            ),
+            const Divider(),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 30.0),
+              child: FilledButton.icon(
+                onPressed: () => showDialog(
+                  context: context,
+                  barrierDismissible: false,
+                  builder: (context) => FutureBuilder(
+                    future: UsuarioService().logout(),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.done) {
+                        if (snapshot.hasError) {
+                          var error = snapshot.error;
+                          if (error is ServiceException) {
+                            return AlertOkDialog(
+                              title: const Text("Erro"),
+                              content: Text(error.cause),
+                            );
+                          }
+                          return UnknownErrorDialog(
+                            exception: error!,
+                            stacktrace: snapshot.stackTrace!,
                           );
                         }
-                        return UnknownErrorDialog(
-                          exception: error!,
-                          stacktrace: snapshot.stackTrace!,
-                        );
+                        returnToLogin(context);
+                        return Container();
                       }
-                      WidgetsBinding.instance.addPostFrameCallback(
-                        (_) => Navigator.pushNamedAndRemoveUntil(
-                          context,
-                          LoginScreen.routeName,
-                          (_) => false,
-                        ),
-                      );
-                      return Container();
-                    }
 
-                    return const Center(
-                      child: CircularProgressIndicator(),
-                    );
-                  },
+                      return const Center(
+                        child: CircularProgressIndicator(),
+                      );
+                    },
+                  ),
                 ),
+                style: ButtonStyle(
+                  shape: const WidgetStatePropertyAll(
+                    RoundedRectangleBorder(),
+                  ),
+                  backgroundColor: WidgetStatePropertyAll(
+                    getColorScheme(context).surfaceContainer,
+                  ),
+                  foregroundColor: WidgetStatePropertyAll(
+                    getColorScheme(context).onSurface,
+                  ),
+                ),
+                icon: const Icon(Icons.logout),
+                label: const Text("Sair"),
               ),
-              style: ButtonStyle(
-                shape: const WidgetStatePropertyAll(
-                  RoundedRectangleBorder(),
-                ),
-                backgroundColor: WidgetStatePropertyAll(
-                  getColorScheme(context).surfaceContainer,
-                ),
-                foregroundColor: WidgetStatePropertyAll(
-                  getColorScheme(context).onSurface,
-                ),
-              ),
-              icon: const Icon(Icons.logout),
-              label: const Text("Sair"),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -158,11 +288,12 @@ class BaseDatabaseWidget extends StatelessWidget {
     this.prefixColumnRenderer,
     this.prefixColumnWidth,
   });
+
+  final String title;
+
   final IService service;
   final Map<String, Map<String, dynamic>> columns;
   final BorderRadiusGeometry? borderRadius;
-
-  final String title;
 
   final TextEditingController? controller;
   final void Function(TextEditingController controller)? onSearch;
@@ -177,187 +308,168 @@ class BaseDatabaseWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     var controller = this.controller ?? TextEditingController();
-
-    return Column(
-      children: [
-        Row(
-          mainAxisSize: MainAxisSize.max,
-          children: [
-            Expanded(
-              child: Text(
-                title,
-                style: GoogleFonts.rubik(
-                  fontSize: 45,
-                  fontWeight: FontWeight.bold,
+    return BaseApp(
+      title: title,
+      titleActions: [
+        if (onSearch != null)
+          Expanded(
+            child: TextFormField(
+              controller: controller,
+              decoration: InputDecoration(
+                filled: true,
+                hintText: "Pesquisar...",
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8.0),
+                  borderSide: BorderSide.none,
                 ),
-              ),
-            ),
-            Expanded(
-              child: SizedBox(
-                height: 42,
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: TextFormField(
-                        controller: controller,
-                        decoration: InputDecoration(
-                          filled: true,
-                          hintText: "Pesquisar...",
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8.0),
-                            borderSide: BorderSide.none,
-                          ),
-                          suffixIcon: FilledButton(
-                            style: ButtonStyle(
-                              shape: WidgetStatePropertyAll(
-                                RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8.0),
-                                ),
-                              ),
-                            ),
-                            onPressed: onSearch != null
-                                ? () => onSearch!(controller)
-                                : null,
-                            child: const Icon(Icons.search),
-                          ),
-                        ),
+                suffixIcon: FilledButton(
+                  style: ButtonStyle(
+                    shape: WidgetStatePropertyAll(
+                      RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8.0),
                       ),
                     ),
-                    Padding(
-                      padding: const EdgeInsets.only(left: 15.0),
-                      child: SizedBox(
-                        height: 42,
-                        child: FilledButton.icon(
-                          style: ButtonStyle(
-                            shape: WidgetStatePropertyAll(
-                              RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8.0),
-                              ),
-                            ),
-                          ),
-                          onPressed: onAdd != null //
-                              ? () => onAdd!(controller)
-                              : null,
-                          label: const Text("Adicionar"),
-                          icon: const Icon(Icons.add),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-        const Divider(height: 25.0),
-        Expanded(
-          child: FutureBuilder(
-            future: service.listar(),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState != ConnectionState.done) {
-                return const Center(
-                  child: CircularProgressIndicator(),
-                );
-              }
-
-              if (snapshot.hasError) {
-                var error = snapshot.error!;
-                var stackTrace = snapshot.stackTrace!;
-
-                WidgetsBinding.instance.addPostFrameCallback(
-                  (_) {
-                    if (error is ServiceException) {
-                      showDialog(
-                        context: context,
-                        builder: (context) => AlertOkDialog(
-                          title: const Text("Erro"),
-                          content: Text(error.toString()),
-                        ),
-                      );
-                    } else {
-                      showDialog(
-                        context: context,
-                        builder: (context) => UnknownErrorDialog(
-                          exception: error,
-                          stacktrace: stackTrace,
-                        ),
-                      );
-                    }
-                  },
-                );
-
-                return Center(child: Text(error.toString()));
-              }
-
-              return PlutoGrid(
-                configuration: PlutoGridConfiguration(
-                  columnSize: const PlutoGridColumnSizeConfig(
-                    resizeMode: PlutoResizeMode.none,
-                    autoSizeMode: PlutoAutoSizeMode.scale,
                   ),
-                  style: Theme.of(context).brightness == Brightness.dark
-                      ? PlutoGridStyleConfig.dark(
-                          gridBorderRadius: borderRadius ?? BorderRadius.zero,
-                          enableColumnBorderVertical: true,
-                        )
-                      : PlutoGridStyleConfig(
-                          gridBorderRadius: borderRadius ?? BorderRadius.zero,
-                          enableColumnBorderVertical: true,
-                        ),
+                  onPressed: () => onSearch!(controller),
+                  child: const Icon(Icons.search),
                 ),
-                columns: [
-                  if (prefixColumnRenderer != null)
-                    PlutoColumn(
-                      width: prefixColumnWidth ?? PlutoGridSettings.columnWidth,
-                      type: PlutoColumnType.select([]),
-                      titlePadding: EdgeInsets.zero,
-                      title: '',
-                      minWidth: 0,
-                      suppressedAutoSize: true,
-                      renderer: prefixColumnRenderer,
-                      readOnly: true,
-                      filterPadding: EdgeInsets.zero,
-                      field: '__prefix',
-                      enableSorting: false,
-                      enableDropToResize: false,
-                      enableContextMenu: false,
-                      cellPadding: EdgeInsets.zero,
-                      enableEditingMode: false,
-                    ),
-                  ...columns.entries.map((e) {
-                    var current = e.value;
-
-                    return PlutoColumn(
-                      width:
-                          Theme.of(context).textTheme.titleMedium!.fontSize! *
-                              10,
-                      type: current['type'],
-                      title: current['title'],
-                      field: e.key,
-                      titleTextAlign: PlutoColumnTextAlign.center,
-                      textAlign: PlutoColumnTextAlign.center,
-                      readOnly: !(current['canEdit'] ?? false),
-                      enableEditingMode: current['canEdit'] ?? false,
-                      suppressedAutoSize:
-                          current['suppressedAutoSize'] ?? false,
-                      renderer: current['renderer'],
-                      enableDropToResize: false,
-                      enableContextMenu: false,
-                    );
-                  })
-                ],
-                rows: List.generate(
-                  snapshot.data?.length ?? 0,
-                  (index) => PlutoRow.fromJson({
-                    '__prefix': null,
-                    ...snapshot.data![index],
-                  }),
-                ),
-              );
-            },
+              ),
+            ),
           ),
-        ),
+        if (onAdd != null)
+          Padding(
+            padding: const EdgeInsets.only(left: 15.0),
+            child: SizedBox(
+              height: 42,
+              child: FilledButton.icon(
+                style: ButtonStyle(
+                  shape: WidgetStatePropertyAll(
+                    RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8.0),
+                    ),
+                  ),
+                ),
+                onPressed: () => onAdd!(controller),
+                label: const Text("Adicionar"),
+                icon: const Icon(Icons.add),
+              ),
+            ),
+          ),
       ],
+      child: FutureBuilder(
+        future: service.listar(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState != ConnectionState.done) {
+            return const Center(
+              child: CircularProgressIndicator(),
+            );
+          }
+
+          if (snapshot.hasError) {
+            var error = snapshot.error!;
+            var stackTrace = snapshot.stackTrace!;
+
+            WidgetsBinding.instance.addPostFrameCallback(
+              (_) {
+                if (error is ServiceException) {
+                  showDialog(
+                    context: context,
+                    builder: (context) => AlertOkDialog(
+                      title: const Text("Erro"),
+                      content: Text(error.toString()),
+                    ),
+                  );
+                } else {
+                  showDialog(
+                    context: context,
+                    builder: (context) => UnknownErrorDialog(
+                      exception: error,
+                      stacktrace: stackTrace,
+                    ),
+                  );
+                }
+              },
+            );
+
+            return Center(child: Text(error.toString()));
+          }
+
+          return PlutoGrid(
+            configuration: PlutoGridConfiguration(
+              columnSize: const PlutoGridColumnSizeConfig(
+                resizeMode: PlutoResizeMode.none,
+                autoSizeMode: PlutoAutoSizeMode.scale,
+              ),
+              style: Theme.of(context).brightness == Brightness.dark
+                  ? PlutoGridStyleConfig.dark(
+                      gridBorderRadius: borderRadius ?? BorderRadius.zero,
+                      enableColumnBorderVertical: true,
+                    )
+                  : PlutoGridStyleConfig(
+                      gridBorderRadius: borderRadius ?? BorderRadius.zero,
+                      enableColumnBorderVertical: true,
+                    ),
+            ),
+            columns: [
+              if (prefixColumnRenderer != null)
+                PlutoColumn(
+                  width: prefixColumnWidth ?? PlutoGridSettings.columnWidth,
+                  type: PlutoColumnType.select([]),
+                  titlePadding: EdgeInsets.zero,
+                  title: '',
+                  minWidth: 0,
+                  suppressedAutoSize: true,
+                  renderer: prefixColumnRenderer,
+                  readOnly: true,
+                  filterPadding: EdgeInsets.zero,
+                  field: '__prefix',
+                  enableSorting: false,
+                  enableDropToResize: false,
+                  enableContextMenu: false,
+                  cellPadding: EdgeInsets.zero,
+                  enableEditingMode: false,
+                ),
+              ...columns.entries.map((e) {
+                var current = e.value;
+
+                return PlutoColumn(
+                  width:
+                      Theme.of(context).textTheme.titleMedium!.fontSize! * 10,
+                  type: current['type'],
+                  title: current['title'],
+                  field: current['field'] ?? e.key,
+                  titleTextAlign: PlutoColumnTextAlign.center,
+                  textAlign: PlutoColumnTextAlign.center,
+                  readOnly: !(current['canEdit'] ?? false),
+                  enableEditingMode: current['canEdit'] ?? false,
+                  suppressedAutoSize: current['suppressedAutoSize'] ?? false,
+                  renderer: current['renderer'],
+                  enableDropToResize: false,
+                  enableContextMenu: false,
+                );
+              })
+            ],
+            rows: List.generate(
+              snapshot.data?.length ?? 0,
+              (index) {
+                columns;
+                var plutoRow = PlutoRow.fromJson({
+                  '__prefix': null,
+                  ...snapshot.data![index],
+                  ...Map.fromEntries(columns.entries
+                      .where(
+                        (element) => element.value['field'] != null,
+                      )
+                      .map(
+                        (e) => MapEntry(e.value['field'], null),
+                      )),
+                });
+                return plutoRow;
+              },
+            ),
+          );
+        },
+      ),
     );
   }
 }

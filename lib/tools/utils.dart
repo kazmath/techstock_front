@@ -5,6 +5,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
+import 'package:techstock_front/pages/login.dart';
+import 'package:techstock_front/pages/widgets.dart';
 
 import '../service/usuario_service.dart';
 import 'constants.dart';
@@ -93,7 +95,8 @@ Future<http.Response> apiRequest(
     }
 
     if (useToken) {
-      headers['Authorization'] = "Bearer ${await UsuarioService.token}";
+      headers['Authorization'] =
+          "Bearer ${(await UsuarioService.usuario)!.token}";
     }
 
     response = switch (method.toLowerCase()) {
@@ -253,4 +256,45 @@ void printHttpTransaction(
   List<String> errors = List.castFrom<dynamic, String>(responseBody["errors"]);
 
   return (data, errors);
+}
+
+void returnToLogin(BuildContext context) {
+  WidgetsBinding.instance.addPostFrameCallback(
+    (_) => Navigator.pushNamedAndRemoveUntil(
+      context,
+      LoginScreen.routeName,
+      (_) => false,
+    ),
+  );
+}
+
+Future<void> checkAuthOrReturnToLogin(BuildContext context) async {
+  var isLoggedIn = await UsuarioService.checkAuth();
+  if (!isLoggedIn) returnToLogin(context);
+}
+
+void showErrorDialog(
+  BuildContext context,
+  Object? error,
+  StackTrace stackTrace,
+) {
+  return WidgetsBinding.instance.addPostFrameCallback((_) {
+    if (error is ServiceException) {
+      showDialog(
+        context: context,
+        builder: (context) => AlertOkDialog(
+          title: Text("Erro"),
+          content: Text(error.cause),
+        ),
+      );
+      return;
+    }
+    showDialog(
+      context: context,
+      builder: (context) => UnknownErrorDialog(
+        exception: error ?? Null,
+        stacktrace: stackTrace,
+      ),
+    );
+  });
 }

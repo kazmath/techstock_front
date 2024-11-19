@@ -5,23 +5,65 @@ import '../tools/exceptions.dart';
 import '../tools/utils.dart';
 import 'service.dart';
 
-class UsuarioService extends IService {
-  static String? _token;
-  static Future<String?> get token async {
-    if (_token == null) {
-      var sharedPreferences = await SharedPreferences.getInstance();
-      _token = sharedPreferences.getString('token');
-    }
-    return _token;
+class UsuarioDTO {
+  UsuarioDTO({
+    required this.token,
+    required this.codigo,
+    required this.email,
+    required this.permissions,
+  });
+
+  final String token;
+  final String? codigo;
+  final String? email;
+  final List<String>? permissions;
+
+  @override
+  operator ==(other) {
+    return other is UsuarioDTO && other.codigo == codigo;
   }
 
-  static List<String>? _permissions;
-  static Future<List<String>?> get permissions async {
-    if (_permissions == null) {
+  @override
+  int get hashCode => codigo.hashCode;
+}
+
+class UsuarioService extends IService {
+  static UsuarioDTO? _usuario;
+  static Future<UsuarioDTO?> get usuario async {
+    if (_usuario == null) {
       var sharedPreferences = await SharedPreferences.getInstance();
-      _permissions = sharedPreferences.getStringList('permissions');
+
+      var token = sharedPreferences.getString('token');
+      if (token == null) return null;
+
+      _usuario = UsuarioDTO(
+        token: token,
+        codigo: sharedPreferences.getString('codigo'),
+        email: sharedPreferences.getString('email'),
+        permissions: sharedPreferences.getStringList('permissions'),
+      );
     }
-    return _permissions;
+    return _usuario;
+  }
+
+  static Future<bool> checkAuth() async {
+    var token = await UsuarioService._usuario?.token;
+    var permissions = await UsuarioService._usuario?.permissions;
+
+    if (token == null || permissions == null) {
+      await UsuarioService().logout();
+      return false;
+    }
+
+    try {
+      await apiRequest(
+        "${Constants.apiURL}/ticket",
+      );
+      return true;
+    } on ServiceException catch (_) {
+      await UsuarioService().logout();
+      return false;
+    }
   }
 
   @override
@@ -105,32 +147,37 @@ class UsuarioService extends IService {
 
     String? token = responseBody!['token'];
 
-    if ((_token = token) != null) {
-      sharedPreferences.setString(
-        'token',
-        token!,
-      );
+    // var usuario = _usuario;
+
+    if (token != null) {
+      sharedPreferences.setString('token', token);
+
+      String? email = responseBody['email'];
+      if (email == null) return false;
+      sharedPreferences.setString('email', email);
+
+      String? codigo = responseBody['codigo'];
+      if (codigo == null) return false;
+      sharedPreferences.setString('codigo', codigo);
 
       List<String>? permissions = responseBody['permissions'] != null
           ? List.castFrom(responseBody['permissions'])
           : null;
-      if ((_permissions = permissions) != null) {
-        sharedPreferences.setStringList(
-          'permissions',
-          permissions!,
-        );
-      }
+      if (permissions == null) return false;
+      sharedPreferences.setStringList('permissions', permissions);
     }
 
-    return token != null;
+    return (await usuario) != null;
   }
 
   Future<void> logout() async {
     var sharedPreferences = await SharedPreferences.getInstance();
 
     sharedPreferences.remove('token');
+    sharedPreferences.remove('email');
+    sharedPreferences.remove('codigo');
     sharedPreferences.remove('permissions');
-    _token = null;
-    _permissions = null;
+
+    _usuario = null;
   }
 }
