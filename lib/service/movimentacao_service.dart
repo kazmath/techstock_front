@@ -3,7 +3,7 @@ import '../tools/exceptions.dart';
 import '../tools/utils.dart';
 import 'service.dart';
 
-class TicketService extends IService {
+class MovimentacaoService extends IService {
   @override
   Future<int> add(Map<String, dynamic> map) {
     // TODO: implement add
@@ -23,25 +23,9 @@ class TicketService extends IService {
   }
 
   @override
-  Future<Map<String, dynamic>> get(int id) async {
-    var response = await apiRequest(
-      "${Constants.apiURL}/ticket/$id",
-      method: 'get',
-    );
-
-    Map<String, dynamic> responseBody;
-    List<String> responseErrors;
-
-    (responseBody, responseErrors) =
-        destructureResponse<Map<String, dynamic>>(response);
-
-    if (responseErrors.isNotEmpty) {
-      throw ServiceException(responseErrors.join(","));
-    }
-
-    var item = responseBody;
-
-    return item;
+  Future<Map<String, dynamic>> get(int id) {
+    // TODO: implement get
+    throw UnimplementedError();
   }
 
   @override
@@ -49,7 +33,7 @@ class TicketService extends IService {
     Map<String, dynamic>? filtro,
   }) async {
     var response = await apiRequest(
-      "${Constants.apiURL}/ticket",
+      "${Constants.apiURL}/movimentacao",
       method: 'get',
       body: filtro,
     );
@@ -69,9 +53,9 @@ class TicketService extends IService {
     return items;
   }
 
-  Future<List<Map<String, dynamic>>> listarStatuses() async {
+  Future<List<Map<String, dynamic>>> listarTipos() async {
     var response = await apiRequest(
-      "${Constants.apiURL}/ticket/statuses",
+      "${Constants.apiURL}/movimentacao/tipos",
       method: 'get',
     );
 

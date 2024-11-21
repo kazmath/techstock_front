@@ -5,7 +5,7 @@ import 'service.dart';
 
 class CategoriaService extends IService {
   @override
-  Future<Map<String, dynamic>> add(Map<String, dynamic> map) {
+  Future<int> add(Map<String, dynamic> map) {
     // TODO: implement add
     throw UnimplementedError();
   }

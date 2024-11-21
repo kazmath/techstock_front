@@ -72,7 +72,7 @@ class _TicketsUsuarioState extends State<TicketsUsuario> {
       listaCategorias,
       listaStatuses,
     ].contains(null)
-        ? BaseApp(
+        ? BaseAppWithAuthCheck(
             title: "Reservas",
             child: errors.isEmpty
                 ? const Center(child: CircularProgressIndicator())

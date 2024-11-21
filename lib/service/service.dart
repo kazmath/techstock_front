@@ -4,5 +4,5 @@ abstract class IService {
   Future<Map<String, dynamic>> get(int id);
   Future<bool> editar(int id, Map<String, dynamic> data);
   Future<bool> deletar(int id);
-  Future<Map<String, dynamic>> add(Map<String, dynamic> map);
+  Future<int> add(Map<String, dynamic> map);
 }

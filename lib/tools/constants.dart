@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:techstock_front/pages/dashboard.dart';
-import 'package:techstock_front/pages/tickets_usuario_db.dart';
-import 'package:techstock_front/pages/usuarios_db.dart';
+import 'package:techstock_front/pages/equipamento_db.dart';
+import 'package:techstock_front/pages/movimentacao_db.dart';
+import 'package:techstock_front/pages/ticket_admin_db.dart';
+import 'package:techstock_front/pages/ticket_usuario_db.dart';
+import 'package:techstock_front/pages/usuario_db.dart';
 
 import 'ui_web_stub.dart' // Stub implementation
     if (dart.library.html) 'dart:ui_web'; // dart:html implementation
@@ -47,6 +50,27 @@ class Constants {
           'widget': const TicketsUsuario(),
           'icon': Icons.confirmation_num_outlined,
           'role': 'ROLE_USER',
+        },
+        {
+          'title': "Reservas", // Usuário
+          'route': TicketsAdmin.routeName,
+          'widget': const TicketsAdmin(),
+          'icon': Icons.confirmation_num_outlined,
+          'role': 'ROLE_ADMIN',
+        },
+        {
+          'title': "Equipamentos",
+          'route': Equipamentos.routeName,
+          'widget': const Equipamentos(),
+          'icon': Icons.devices,
+          'role': 'ROLE_ADMIN',
+        },
+        {
+          'title': "Movimentações",
+          'route': Movimentacoes.routeName,
+          'widget': const Movimentacoes(),
+          'icon': Icons.compare_arrows,
+          'role': 'ROLE_ADMIN',
         },
       ];
 }

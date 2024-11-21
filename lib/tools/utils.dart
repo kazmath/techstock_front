@@ -298,3 +298,9 @@ void showErrorDialog(
     );
   });
 }
+
+Color getContrastColor(Color color) {
+  var luminance = color.computeLuminance();
+
+  return luminance > .5 ? Colors.black : Colors.white;
+}

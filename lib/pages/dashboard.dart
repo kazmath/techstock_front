@@ -15,7 +15,7 @@ class Dashboard extends StatelessWidget {
   Widget build(BuildContext context) {
     checkAuthOrReturnToLogin(context);
 
-    return BaseApp(
+    return BaseAppWithAuthCheck(
       title: "Dashboard",
       child: Padding(
         padding: const EdgeInsets.all(20.0),

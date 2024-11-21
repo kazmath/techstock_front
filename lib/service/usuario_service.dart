@@ -67,9 +67,25 @@ class UsuarioService extends IService {
   }
 
   @override
-  Future<Map<String, dynamic>> add(Map<String, dynamic> map) {
-    // TODO: implement add
-    throw UnimplementedError();
+  Future<int> add(Map<String, dynamic> map) async {
+    var response = await apiRequest(
+      "${Constants.apiURL}/usuario",
+      body: map,
+    );
+
+    int? responseBody;
+    List<String> responseErrors;
+
+    (responseBody, responseErrors) =
+        destructureResponse<Map<String, dynamic>>(response);
+
+    if (responseErrors.isNotEmpty) {
+      throw ServiceException(responseErrors.join(","));
+    }
+
+    var items = responseBody;
+
+    return items!;
   }
 
   @override
@@ -85,9 +101,25 @@ class UsuarioService extends IService {
   }
 
   @override
-  Future<Map<String, dynamic>> get(int id) {
-    // TODO: implement get
-    throw UnimplementedError();
+  Future<Map<String, dynamic>> get(int id) async {
+    var response = await apiRequest(
+      "${Constants.apiURL}/usuario/$id",
+      method: 'get',
+    );
+
+    Map<String, dynamic> responseBody;
+    List<String> responseErrors;
+
+    (responseBody, responseErrors) =
+        destructureResponse<Map<String, dynamic>>(response);
+
+    if (responseErrors.isNotEmpty) {
+      throw ServiceException(responseErrors.join(","));
+    }
+
+    var item = responseBody;
+
+    return item;
   }
 
   @override

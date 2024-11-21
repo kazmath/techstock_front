@@ -1,12 +1,14 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:pluto_grid/pluto_grid.dart';
 import 'package:techstock_front/service/ticket_service.dart';
 import 'package:techstock_front/tools/constants.dart';
+import 'package:techstock_front/tools/utils.dart';
 
 import '../service/service.dart';
 import '../service/usuario_service.dart';
 import '../tools/exceptions.dart';
-import '../tools/utils.dart';
 
 class BaseApp extends StatelessWidget {
   const BaseApp({
@@ -14,11 +16,17 @@ class BaseApp extends StatelessWidget {
     required this.title,
     required this.child,
     this.titleActions,
+    this.leading,
+    this.appBarTitle,
+    this.titleAlignment,
   });
 
   final String title;
   final List<Widget>? titleActions;
   final Widget child;
+  final Widget? leading;
+  final Widget? appBarTitle;
+  final AlignmentGeometry? titleAlignment;
 
   @override
   Widget build(BuildContext context) {
@@ -27,6 +35,7 @@ class BaseApp extends StatelessWidget {
         backgroundColor: getColorScheme(context).secondary,
         foregroundColor: getColorScheme(context).onSecondary,
         centerTitle: false,
+        leading: leading,
         title: ConstrainedBox(
           constraints: BoxConstraints(
             maxHeight: kToolbarHeight,
@@ -36,7 +45,7 @@ class BaseApp extends StatelessWidget {
             mainAxisSize: MainAxisSize.max,
             // mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              Expanded(child: Text(title)),
+              Expanded(child: appBarTitle ?? Text(title)),
               IconButton(
                 onPressed: () {},
                 icon: const Icon(Icons.notifications),
@@ -52,34 +61,63 @@ class BaseApp extends StatelessWidget {
       ),
       drawer: GlobalDrawer(),
       backgroundColor: const Color(0xFFD6D6D6),
-      body: FutureBuilder(
-          future: TicketService().listar(),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState != ConnectionState.done) {
-              return const Center(child: CircularProgressIndicator());
-            }
-            if (snapshot.hasError) {
-              UsuarioService().logout().then((_) => returnToLogin(context));
-              return Container();
-            }
+      body: child,
+    );
+  }
+}
 
-            return Container(
-              margin: const EdgeInsets.all(20.0),
-              padding: const EdgeInsets.all(30.0),
-              decoration: BoxDecoration(
-                color: const Color(0xFFFFFFFF),
-                borderRadius: BorderRadius.circular(20.0),
+class BaseAppWithAuthCheck extends StatelessWidget {
+  const BaseAppWithAuthCheck({
+    super.key,
+    required this.title,
+    required this.child,
+    this.titleActions,
+    this.leading,
+    this.appBarTitle,
+    this.titleAlignment,
+  });
+
+  final String title;
+  final List<Widget>? titleActions;
+  final Widget child;
+  final Widget? leading;
+  final Widget? appBarTitle;
+  final AlignmentGeometry? titleAlignment;
+
+  @override
+  Widget build(BuildContext context) {
+    return BaseApp(
+      title: title,
+      child: FutureBuilder(
+        future: TicketService().listar(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState != ConnectionState.done) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (snapshot.hasError) {
+            UsuarioService().logout().then((_) => returnToLogin(context));
+            return Container();
+          }
+
+          return Container(
+            margin: const EdgeInsets.all(20.0),
+            padding: const EdgeInsets.all(30.0),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFFFFFF),
+              borderRadius: BorderRadius.circular(20.0),
+            ),
+            child: ConstrainedBox(
+              constraints: BoxConstraints.expand(
+                width: MediaQuery.of(context).size.width - 20.0,
               ),
-              child: ConstrainedBox(
-                constraints: BoxConstraints.expand(
-                  width: MediaQuery.of(context).size.width - 20.0,
-                ),
-                child: Column(
-                  children: [
-                    Row(
-                      mainAxisSize: MainAxisSize.max,
-                      children: [
-                        Expanded(
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisSize: MainAxisSize.max,
+                    children: [
+                      Expanded(
+                        child: Align(
+                          alignment: titleAlignment ?? Alignment.centerLeft,
                           child: Text(
                             title,
                             style: Theme.of(context)
@@ -89,26 +127,28 @@ class BaseApp extends StatelessWidget {
                                     color: getColorScheme(context).secondary),
                           ),
                         ),
-                        if (titleActions != null)
-                          Expanded(
-                            child: SizedBox(
-                              height: 42,
-                              child: Row(
-                                children: titleActions!,
-                              ),
+                      ),
+                      if (titleActions != null)
+                        Expanded(
+                          child: SizedBox(
+                            height: 42,
+                            child: Row(
+                              children: titleActions!,
                             ),
                           ),
-                      ],
-                    ),
-                    const Divider(height: 25.0),
-                    Expanded(
-                      child: child,
-                    ),
-                  ],
-                ),
+                        ),
+                    ],
+                  ),
+                  const Divider(height: 25.0),
+                  Expanded(
+                    child: child,
+                  ),
+                ],
               ),
-            );
-          }),
+            ),
+          );
+        },
+      ),
     );
   }
 }
@@ -308,7 +348,7 @@ class BaseDatabaseWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     var controller = this.controller ?? TextEditingController();
-    return BaseApp(
+    return BaseAppWithAuthCheck(
       title: title,
       titleActions: [
         if (onSearch != null)
@@ -586,6 +626,277 @@ class UnknownErrorDialog extends StatelessWidget {
                     color: Theme.of(context).colorScheme.onSecondaryContainer,
                   ),
                 ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class BaseAddEditDialog extends StatefulWidget {
+  const BaseAddEditDialog({
+    super.key,
+    required this.fields,
+    required this.title,
+    this.confirmButtonLabel,
+    this.confirmButtonCallback,
+    this.deleteButtonCallback,
+    this.cancelButtonLabel,
+  });
+  final String title;
+
+  final Widget? confirmButtonLabel;
+  final FutureOr<void> Function(
+    Map<String, dynamic>? result,
+  )? confirmButtonCallback;
+
+  final FutureOr<void> Function(
+    Map<String, dynamic>? result,
+  )? deleteButtonCallback;
+
+  final Widget? cancelButtonLabel;
+
+  final List<Map<String, dynamic>> fields;
+
+  @override
+  State<BaseAddEditDialog> createState() => _BaseAddEditDialogState();
+}
+
+class _BaseAddEditDialogState extends State<BaseAddEditDialog> {
+  final formKey = GlobalKey<FormState>();
+  List<
+      (
+        String fieldName,
+        TextEditingController controller,
+        dynamic Function(String value)? converter,
+      )> resultTuples = [];
+
+  Map<String, dynamic> get result {
+    return Map.fromEntries(resultTuples.map(
+      (e) {
+        dynamic valueTreated;
+        if (e.$3 != null) {
+          valueTreated = e.$3!(e.$2.text);
+        } else {
+          valueTreated = e.$2.text;
+        }
+        return MapEntry(e.$1, valueTreated);
+      },
+    ));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final fontSize = textTheme.bodyMedium!.fontSize!;
+
+    return BaseApp(
+      title: "",
+      child: Center(
+        child: Container(
+          padding: const EdgeInsets.all(30.0),
+          decoration: BoxDecoration(
+            color: const Color(0xFFFFFFFF),
+            borderRadius: BorderRadius.circular(20.0),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                widget.title,
+                style: Theme.of(context)
+                    .textTheme
+                    .displayLarge!
+                    .copyWith(color: getColorScheme(context).secondary),
+              ),
+              Form(
+                key: formKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    ...widget.fields.map(
+                      (map) {
+                        Widget createField(Map<String, dynamic> signature) {
+                          var controller = TextEditingController();
+                          resultTuples.add((
+                            signature['field_name'],
+                            controller,
+                            signature['converter'],
+                          ));
+                          Widget widget;
+                          if (signature['fieldBuilder'] != null) {
+                            Widget Function(
+                              TextEditingController controller,
+                            ) builder = signature['fieldBuilder'];
+                            widget = builder(controller);
+                          } else {
+                            widget = TextFormField(
+                              controller: controller,
+                              decoration: InputDecoration(
+                                border: const OutlineInputBorder(),
+                                hintText: signature['hint'] as String?,
+                              ),
+                              validator: (value) {
+                                if (signature['validator'] != null) {
+                                  return signature['validator']!(value);
+                                }
+
+                                if (value?.isEmpty ?? true) {
+                                  return "Campo não pode ser vazio";
+                                }
+                                return null;
+                              },
+                            );
+                          }
+
+                          return SizedBox(
+                            width: fontSize * 25,
+                            child: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  if (signature['label'] != null)
+                                    DefaultTextStyle(
+                                      style: textTheme.titleLarge!,
+                                      child: signature['label'] as Widget,
+                                    ),
+                                  widget,
+                                ],
+                              ),
+                            ),
+                          );
+                        }
+
+                        if (map['children'] != null) {
+                          return Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              ...(map['children'] as List<Map<String, dynamic>>)
+                                  .map(
+                                (signatureInner) => createField(signatureInner),
+                              ),
+                            ],
+                          );
+                        }
+
+                        return createField(map);
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(4.0),
+                    child: FilledButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: ButtonStyle(
+                        padding: WidgetStatePropertyAll(
+                          const EdgeInsets.all(25.0).add(
+                            const EdgeInsets.symmetric(horizontal: 20.0),
+                          ),
+                        ),
+                        shape: WidgetStatePropertyAll(
+                          RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8.0),
+                          ),
+                        ),
+                        backgroundColor: WidgetStatePropertyAll(
+                          getColorScheme(context).secondaryContainer,
+                        ),
+                        foregroundColor: WidgetStatePropertyAll(
+                          getColorScheme(context).onSecondaryContainer,
+                        ),
+                      ),
+                      child: widget.cancelButtonLabel ??
+                          Text(
+                            "Voltar",
+                            style: TextStyle(
+                              fontSize: textTheme.titleMedium!.fontSize!,
+                            ),
+                          ),
+                    ),
+                  ),
+                  if (widget.deleteButtonCallback != null)
+                    Padding(
+                      padding: const EdgeInsets.all(4.0),
+                      child: FilledButton(
+                        onPressed: () async {
+                          return await widget.deleteButtonCallback!(result);
+                        },
+                        style: ButtonStyle(
+                          padding: WidgetStatePropertyAll(
+                            const EdgeInsets.all(25.0).add(
+                              const EdgeInsets.symmetric(horizontal: 20.0),
+                            ),
+                          ),
+                          shape: WidgetStatePropertyAll(
+                            RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8.0),
+                            ),
+                          ),
+                          backgroundColor: WidgetStatePropertyAll(
+                            getColorScheme(context).errorContainer,
+                          ),
+                          foregroundColor: WidgetStatePropertyAll(
+                            getColorScheme(context).onErrorContainer,
+                          ),
+                        ),
+                        child: widget.confirmButtonLabel ??
+                            Text(
+                              "Excluir",
+                              style: TextStyle(
+                                fontSize: textTheme.titleMedium!.fontSize!,
+                              ),
+                            ),
+                      ),
+                    ),
+                  Padding(
+                    padding: const EdgeInsets.all(4.0),
+                    child: FilledButton(
+                      onPressed: () async {
+                        if (formKey.currentState?.validate() != true) return;
+
+                        if (widget.confirmButtonCallback != null) {
+                          return await widget.confirmButtonCallback!(result);
+                        }
+
+                        Navigator.pop(context, result);
+                      },
+                      style: ButtonStyle(
+                        padding: WidgetStatePropertyAll(
+                          const EdgeInsets.all(25.0).add(
+                            const EdgeInsets.symmetric(horizontal: 20.0),
+                          ),
+                        ),
+                        shape: WidgetStatePropertyAll(
+                          RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8.0),
+                          ),
+                        ),
+                        backgroundColor: const WidgetStatePropertyAll(
+                          Colors.green,
+                        ),
+                        foregroundColor: WidgetStatePropertyAll(
+                          getContrastColor(Colors.green),
+                        ),
+                      ),
+                      child: widget.confirmButtonLabel ??
+                          Text(
+                            "SALVAR",
+                            style: TextStyle(
+                              fontSize: textTheme.titleMedium!.fontSize!,
+                            ),
+                          ),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
