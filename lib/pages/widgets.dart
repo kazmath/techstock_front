@@ -323,6 +323,7 @@ class BaseDatabaseWidget extends StatelessWidget {
     this.borderRadius,
     this.prefixColumnRenderer,
     this.prefixColumnWidth,
+    this.filtro,
     this.filterFields,
   });
 
@@ -342,6 +343,7 @@ class BaseDatabaseWidget extends StatelessWidget {
   )? prefixColumnRenderer;
   final double? prefixColumnWidth;
 
+  final Map<String, dynamic>? filtro;
   final List<Map<String, dynamic>>? filterFields;
 
   @override
@@ -369,6 +371,7 @@ class BaseDatabaseWidget extends StatelessWidget {
           Expanded(
             child: TextFormField(
               controller: controller,
+              onFieldSubmitted: (_) => onSearch!(controller),
               decoration: InputDecoration(
                 filled: true,
                 hintText: "Pesquisar...",
@@ -411,7 +414,7 @@ class BaseDatabaseWidget extends StatelessWidget {
           ),
       ],
       child: FutureBuilder(
-        future: service.listar(),
+        future: service.listar(filtro: filtro),
         builder: (context, snapshot) {
           if (snapshot.connectionState != ConnectionState.done) {
             return const Center(
@@ -714,168 +717,141 @@ class _BaseAddEditDialogState extends State<BaseAddEditDialog> {
             color: const Color(0xFFFFFFFF),
             borderRadius: BorderRadius.circular(20.0),
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                widget.title,
-                style: Theme.of(context)
-                    .textTheme
-                    .displayLarge!
-                    .copyWith(color: getColorScheme(context).secondary),
-              ),
-              Form(
-                key: formKey,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    ...widget.fields.map(
-                      (map) {
-                        Widget createField(Map<String, dynamic> signature) {
-                          var controller = TextEditingController(
-                            text: signature['defaultText']?.toString(),
-                          );
-                          var inputDecoration = InputDecoration(
-                            border: const OutlineInputBorder(),
-                            hintText: signature['hint'] as String?,
-                          );
-                          if (signature['empty'] != true) {
-                            resultTuples.add((
-                              signature['field_name'],
-                              controller,
-                              signature['converter'],
-                            ));
-                          }
-                          Widget widget;
-                          if (signature['fieldBuilder'] != null) {
-                            Widget Function(
-                              TextEditingController controller,
-                            ) builder = signature['fieldBuilder'];
-                            widget = builder(controller);
-                          } else {
-                            bool showPassword = signature['obscure'] == null;
-                            widget = StatefulBuilder(
-                              builder: (context, setInnerState) {
-                                return TextFormField(
-                                  controller: controller,
-                                  obscureText: !showPassword,
-                                  decoration: inputDecoration.copyWith(
-                                    suffixIcon: signature['obscure'] != null
-                                        ? IconButton(
-                                            onPressed: () => setInnerState(() {
-                                              showPassword = !showPassword;
-                                            }),
-                                            icon: Icon(
-                                              showPassword
-                                                  ? Icons
-                                                      .visibility_off_outlined
-                                                  : Icons.visibility_outlined,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  widget.title,
+                  style: Theme.of(context)
+                      .textTheme
+                      .displayLarge!
+                      .copyWith(color: getColorScheme(context).secondary),
+                ),
+                Form(
+                  key: formKey,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      ...widget.fields.map(
+                        (map) {
+                          Widget createField(Map<String, dynamic> signature) {
+                            var controller = TextEditingController(
+                              text: signature['defaultText']?.toString(),
+                            );
+                            var inputDecoration = InputDecoration(
+                              border: const OutlineInputBorder(),
+                              hintText: signature['hint'] as String?,
+                            );
+                            if (signature['empty'] != true) {
+                              resultTuples.add((
+                                signature['field_name'],
+                                controller,
+                                signature['converter'],
+                              ));
+                            }
+                            Widget widget;
+                            if (signature['fieldBuilder'] != null) {
+                              Widget Function(
+                                TextEditingController controller,
+                              ) builder = signature['fieldBuilder'];
+                              widget = builder(controller);
+                            } else {
+                              bool showPassword = signature['obscure'] == null;
+                              widget = StatefulBuilder(
+                                builder: (context, setInnerState) {
+                                  return TextFormField(
+                                    controller: controller,
+                                    obscureText: !showPassword,
+                                    decoration: inputDecoration.copyWith(
+                                      suffixIcon: signature['obscure'] != null
+                                          ? IconButton(
+                                              onPressed: () =>
+                                                  setInnerState(() {
+                                                showPassword = !showPassword;
+                                              }),
+                                              icon: Icon(
+                                                showPassword
+                                                    ? Icons
+                                                        .visibility_off_outlined
+                                                    : Icons.visibility_outlined,
+                                              ),
+                                            )
+                                          : null,
+                                    ),
+                                    validator: (value) {
+                                      if (signature['validator'] != null) {
+                                        return signature['validator']!(value);
+                                      }
+
+                                      if (value?.isEmpty ?? true) {
+                                        return "Campo não pode ser vazio";
+                                      }
+                                      return null;
+                                    },
+                                  );
+                                },
+                              );
+                            }
+
+                            return SizedBox(
+                              width: fontSize * 25,
+                              child: Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    if (signature['label'] != null)
+                                      DefaultTextStyle(
+                                        style: textTheme.titleLarge!,
+                                        child: signature['label'] as Widget,
+                                      ),
+                                    signature['empty'] == true
+                                        ? TextFormField(
+                                            decoration:
+                                                inputDecoration.copyWith(
+                                              enabled: false,
                                             ),
                                           )
-                                        : null,
-                                  ),
-                                  validator: (value) {
-                                    if (signature['validator'] != null) {
-                                      return signature['validator']!(value);
-                                    }
-
-                                    if (value?.isEmpty ?? true) {
-                                      return "Campo não pode ser vazio";
-                                    }
-                                    return null;
-                                  },
-                                );
-                              },
+                                        : widget,
+                                  ],
+                                ),
+                              ),
                             );
                           }
 
-                          return SizedBox(
-                            width: fontSize * 25,
-                            child: Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                          if (map['children'] != null) {
+                            return SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  if (signature['label'] != null)
-                                    DefaultTextStyle(
-                                      style: textTheme.titleLarge!,
-                                      child: signature['label'] as Widget,
-                                    ),
-                                  signature['empty'] == true
-                                      ? TextFormField(
-                                          decoration: inputDecoration.copyWith(
-                                            enabled: false,
-                                          ),
-                                        )
-                                      : widget,
+                                  ...(map['children']
+                                          as List<Map<String, dynamic>>)
+                                      .map(
+                                    (signatureInner) {
+                                      return createField(signatureInner);
+                                    },
+                                  ),
                                 ],
                               ),
-                            ),
-                          );
-                        }
+                            );
+                          }
 
-                        if (map['children'] != null) {
-                          return Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              ...(map['children'] as List<Map<String, dynamic>>)
-                                  .map(
-                                (signatureInner) {
-                                  return createField(signatureInner);
-                                },
-                              ),
-                            ],
-                          );
-                        }
-
-                        return createField(map);
-                      },
-                    ),
-                  ],
-                ),
-              ),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.all(4.0),
-                    child: FilledButton(
-                      onPressed: () => Navigator.pop(context),
-                      style: ButtonStyle(
-                        padding: WidgetStatePropertyAll(
-                          const EdgeInsets.all(25.0).add(
-                            const EdgeInsets.symmetric(horizontal: 20.0),
-                          ),
-                        ),
-                        shape: WidgetStatePropertyAll(
-                          RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8.0),
-                          ),
-                        ),
-                        backgroundColor: WidgetStatePropertyAll(
-                          getColorScheme(context).secondaryContainer,
-                        ),
-                        foregroundColor: WidgetStatePropertyAll(
-                          getColorScheme(context).onSecondaryContainer,
-                        ),
+                          return createField(map);
+                        },
                       ),
-                      child: widget.cancelButtonLabel ??
-                          Text(
-                            "Voltar",
-                            style: TextStyle(
-                              fontSize: textTheme.titleMedium!.fontSize!,
-                            ),
-                          ),
-                    ),
+                    ],
                   ),
-                  if (widget.deleteButtonCallback != null)
+                ),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
                     Padding(
                       padding: const EdgeInsets.all(4.0),
                       child: FilledButton(
-                        onPressed: () async {
-                          return await widget.deleteButtonCallback!(result);
-                        },
+                        onPressed: () => Navigator.pop(context),
                         style: ButtonStyle(
                           padding: WidgetStatePropertyAll(
                             const EdgeInsets.all(25.0).add(
@@ -888,63 +864,98 @@ class _BaseAddEditDialogState extends State<BaseAddEditDialog> {
                             ),
                           ),
                           backgroundColor: WidgetStatePropertyAll(
-                            getColorScheme(context).errorContainer,
+                            getColorScheme(context).secondaryContainer,
                           ),
                           foregroundColor: WidgetStatePropertyAll(
-                            getColorScheme(context).onErrorContainer,
+                            getColorScheme(context).onSecondaryContainer,
                           ),
                         ),
-                        child: widget.confirmButtonLabel ??
+                        child: widget.cancelButtonLabel ??
                             Text(
-                              "Excluir",
+                              "Voltar",
                               style: TextStyle(
                                 fontSize: textTheme.titleMedium!.fontSize!,
                               ),
                             ),
                       ),
                     ),
-                  Padding(
-                    padding: const EdgeInsets.all(4.0),
-                    child: FilledButton(
-                      onPressed: () async {
-                        if (formKey.currentState?.validate() != true) return;
-
-                        if (widget.confirmButtonCallback != null) {
-                          return await widget.confirmButtonCallback!(result);
-                        }
-
-                        Navigator.pop(context, result);
-                      },
-                      style: ButtonStyle(
-                        padding: WidgetStatePropertyAll(
-                          const EdgeInsets.all(25.0).add(
-                            const EdgeInsets.symmetric(horizontal: 20.0),
-                          ),
-                        ),
-                        shape: WidgetStatePropertyAll(
-                          RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8.0),
-                          ),
-                        ),
-                        backgroundColor: const WidgetStatePropertyAll(
-                          Colors.green,
-                        ),
-                        foregroundColor: WidgetStatePropertyAll(
-                          getContrastColor(Colors.green),
-                        ),
-                      ),
-                      child: widget.confirmButtonLabel ??
-                          Text(
-                            "SALVAR",
-                            style: TextStyle(
-                              fontSize: textTheme.titleMedium!.fontSize!,
+                    if (widget.deleteButtonCallback != null)
+                      Padding(
+                        padding: const EdgeInsets.all(4.0),
+                        child: FilledButton(
+                          onPressed: () async {
+                            return await widget.deleteButtonCallback!(result);
+                          },
+                          style: ButtonStyle(
+                            padding: WidgetStatePropertyAll(
+                              const EdgeInsets.all(25.0).add(
+                                const EdgeInsets.symmetric(horizontal: 20.0),
+                              ),
+                            ),
+                            shape: WidgetStatePropertyAll(
+                              RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8.0),
+                              ),
+                            ),
+                            backgroundColor: WidgetStatePropertyAll(
+                              getColorScheme(context).errorContainer,
+                            ),
+                            foregroundColor: WidgetStatePropertyAll(
+                              getColorScheme(context).onErrorContainer,
                             ),
                           ),
+                          child: widget.confirmButtonLabel ??
+                              Text(
+                                "Excluir",
+                                style: TextStyle(
+                                  fontSize: textTheme.titleMedium!.fontSize!,
+                                ),
+                              ),
+                        ),
+                      ),
+                    Padding(
+                      padding: const EdgeInsets.all(4.0),
+                      child: FilledButton(
+                        onPressed: () async {
+                          if (formKey.currentState?.validate() != true) return;
+
+                          if (widget.confirmButtonCallback != null) {
+                            return await widget.confirmButtonCallback!(result);
+                          }
+
+                          Navigator.pop(context, result);
+                        },
+                        style: ButtonStyle(
+                          padding: WidgetStatePropertyAll(
+                            const EdgeInsets.all(25.0).add(
+                              const EdgeInsets.symmetric(horizontal: 20.0),
+                            ),
+                          ),
+                          shape: WidgetStatePropertyAll(
+                            RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8.0),
+                            ),
+                          ),
+                          backgroundColor: const WidgetStatePropertyAll(
+                            Colors.green,
+                          ),
+                          foregroundColor: WidgetStatePropertyAll(
+                            getContrastColor(Colors.green),
+                          ),
+                        ),
+                        child: widget.confirmButtonLabel ??
+                            Text(
+                              "SALVAR",
+                              style: TextStyle(
+                                fontSize: textTheme.titleMedium!.fontSize!,
+                              ),
+                            ),
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            ],
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),

@@ -121,10 +121,12 @@ void main() {
         for (var element in Constants.telas) {
           if (settings.name == element['route']) {
             return MaterialPageRoute(
+              settings: settings,
               builder: (context) => element['widget'] ?? const Placeholder(),
             );
           }
         }
+
 
         return MaterialPageRoute(
           builder: (context) => const LoginScreen(),

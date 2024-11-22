@@ -25,6 +25,8 @@ class _TicketsUsuarioState extends State<TicketsUsuario> {
 
   List<Object?> errors = List.empty(growable: true);
 
+  Map<String, dynamic> filtro = {};
+
   @override
   void initState() {
     super.initState();
@@ -89,7 +91,14 @@ class _TicketsUsuarioState extends State<TicketsUsuario> {
               );
               if (result != null) setState(() {});
             },
-            onSearch: (controller) {}, // TODO
+            onSearch: (controller) {
+              if (controller.text == "") {
+                filtro.remove('query');
+              } else {
+                filtro['query'] = controller.text;
+              }
+              setState(() {});
+            }, // TODO
             columns: {
               'id': {
                 'title': "Num. Reserva",

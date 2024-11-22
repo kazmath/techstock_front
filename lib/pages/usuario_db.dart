@@ -23,6 +23,8 @@ class _UsuariosState extends State<Usuarios> {
 
   Object? error;
 
+  Map<String, dynamic> filtro = {};
+
   @override
   void initState() {
     super.initState();
@@ -63,7 +65,15 @@ class _UsuariosState extends State<Usuarios> {
               );
               if (result != null) setState(() {});
             },
-            onSearch: (controller) {},
+            filtro: filtro,
+            onSearch: (controller) {
+              if (controller.text == "") {
+                filtro.remove('query');
+              } else {
+                filtro['query'] = controller.text;
+              }
+              setState(() {});
+            },
             prefixColumnRenderer: (PlutoColumnRendererContext rendererContext) {
               return IconButton(
                 onPressed: () async {
@@ -74,13 +84,6 @@ class _UsuariosState extends State<Usuarios> {
                     ),
                   );
                   if (result != null) setState(() {});
-                  showDialog(
-                    context: context,
-                    builder: (context) => AlertOkDialog(
-                      title: Text("OK"),
-                      content: Text(jsonify(result)),
-                    ),
-                  );
                 },
                 icon: Icon(Icons.edit),
               );

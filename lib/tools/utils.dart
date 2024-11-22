@@ -89,6 +89,8 @@ Future<http.Response> apiRequest(
     if (body != null) {
       if (body is Map<String, dynamic> || body is List) {
         bodyString = jsonify(body);
+      } else if (body is String) {
+        bodyString = body;
       } else {
         throw ServiceException("Corpo do request inválido");
       }

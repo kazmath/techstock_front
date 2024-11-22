@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:pluto_grid/pluto_grid.dart';
+import 'package:techstock_front/tools/exceptions.dart';
 
 import '../service/categoria_service.dart';
 import '../service/equipamento_service.dart';
@@ -25,6 +26,8 @@ class _TicketsAdminState extends State<TicketsAdmin> {
   List<Map<String, dynamic>>? listaUsuarios;
 
   List<Object?> errors = List.empty(growable: true);
+
+  Map<String, dynamic> filtro = {};
 
   @override
   void initState() {
@@ -95,7 +98,14 @@ class _TicketsAdminState extends State<TicketsAdmin> {
             title: "Reservas",
             service: TicketService(),
             // onAdd: (controller) {}, // TODO
-            onSearch: (controller) {}, // TODO
+            onSearch: (controller) {
+              if (controller.text == "") {
+                filtro.remove('query');
+              } else {
+                filtro['query'] = controller.text;
+              }
+              setState(() {});
+            }, // TODO
             columns: {
               'id': {
                 'title': "Num. Reserva",
@@ -194,23 +204,61 @@ class _TicketsAdminState extends State<TicketsAdmin> {
                       )
                       .singleOrNull;
 
-                  int? cor = int.tryParse(
-                    (status?['corHex'] as String?)?.substring(1) ?? '',
-                    radix: 16,
-                  );
-                  return Center(
-                    child: Text.rich(TextSpan(
-                      children: [
-                        if (cor != null)
-                          WidgetSpan(
-                            child: Icon(
-                              Icons.circle,
-                              color: Color(0xFF000000 + cor),
+                  int? cor(String? corHex) => int.tryParse(
+                        corHex?.substring(1) ?? '',
+                        radix: 16,
+                      );
+
+                  return DropdownMenu<String>(
+                    leadingIcon: cor(status?['corHex']) != null
+                        ? Icon(
+                            Icons.circle,
+                            color: Color(
+                              0xFF000000 + cor(status!['corHex'])!,
                             ),
+                          )
+                        : null,
+                    inputDecorationTheme:
+                        InputDecorationTheme(border: InputBorder.none),
+                    initialSelection: status?['codigo'],
+                    onSelected: (value) async {
+                      var row = rendererContext.row.toJson();
+                      try {
+                        await TicketService().editarStatus(
+                          row['id'],
+                          value!,
+                        );
+                        setState(() {});
+                      } on ServiceException catch (e) {
+                        showDialog(
+                          context: context,
+                          builder: (context) => AlertOkDialog(
+                            title: Text("Erro"),
+                            content: Text(e.cause),
                           ),
-                        TextSpan(text: status?['descricao'] ?? ''),
-                      ],
-                    )),
+                        );
+                      }
+                    },
+                    dropdownMenuEntries: listaStatuses?.map(
+                          (e) {
+                            return DropdownMenuEntry<String>(
+                              leadingIcon: cor(e['corHex']) != null
+                                  ? Icon(
+                                      Icons.circle,
+                                      color: Color(
+                                        0xFF000000 + cor(e['corHex'])!,
+                                      ),
+                                    )
+                                  : null,
+                              value: e['codigo'],
+                              label: e['descricao'],
+                              labelWidget: Center(
+                                child: Text(e['descricao'] ?? ''),
+                              ),
+                            );
+                          },
+                        ).toList() ??
+                        [],
                   );
                 },
               },

@@ -38,6 +38,27 @@ class TicketService extends IService {
     throw UnimplementedError();
   }
 
+  Future<int?> editarStatus(int id, String data) async {
+    var response = await apiRequest(
+      "${Constants.apiURL}/ticket/editar_status/$id",
+      method: 'put',
+      body: data,
+    );
+
+    int? responseBody;
+    List<String> responseErrors;
+
+    (responseBody, responseErrors) = destructureResponse<int>(response);
+
+    if (responseErrors.isNotEmpty) {
+      throw ServiceException(responseErrors.join(","));
+    }
+
+    var item = responseBody;
+
+    return item;
+  }
+
   @override
   Future<Map<String, dynamic>> get(int id) async {
     var response = await apiRequest(

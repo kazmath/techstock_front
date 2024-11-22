@@ -5,21 +5,89 @@ import 'service.dart';
 
 class EquipamentoService extends IService {
   @override
-  Future<int> add(Map<String, dynamic> map) {
-    // TODO: implement add
-    throw UnimplementedError();
+  Future<int> add(Map<String, dynamic> map) async {
+    var response = await apiRequest(
+      "${Constants.apiURL}/equipamento",
+      body: map,
+    );
+
+    int? responseBody;
+    List<String> responseErrors;
+
+    (responseBody, responseErrors) =
+        destructureResponse<Map<String, dynamic>>(response);
+
+    if (responseErrors.isNotEmpty) {
+      throw ServiceException(responseErrors.join(","));
+    }
+
+    var items = responseBody;
+
+    return items!;
   }
 
   @override
-  Future<bool> deletar(int id) {
-    // TODO: implement deletar
-    throw UnimplementedError();
+  Future<bool> deletar(int id) async {
+    var response = await apiRequest(
+      "${Constants.apiURL}/equipamento/$id",
+      method: 'delete',
+    );
+
+    bool responseBody;
+    List<String> responseErrors;
+
+    (responseBody, responseErrors) = destructureResponse<bool>(response);
+
+    if (responseErrors.isNotEmpty) {
+      throw ServiceException(responseErrors.join(","));
+    }
+
+    var item = responseBody;
+
+    return item;
   }
 
   @override
-  Future<int> editar(int id, Map<String, dynamic> data) {
-    // TODO: implement editar
-    throw UnimplementedError();
+  Future<int> editar(int id, Map<String, dynamic> data) async {
+    var response = await apiRequest(
+      "${Constants.apiURL}/equipamento/$id",
+      method: 'put',
+      body: data,
+    );
+
+    int responseBody;
+    List<String> responseErrors;
+
+    (responseBody, responseErrors) = destructureResponse<int>(response);
+
+    if (responseErrors.isNotEmpty) {
+      throw ServiceException(responseErrors.join(","));
+    }
+
+    var item = responseBody;
+
+    return item;
+  }
+
+  Future<int?> editarStatus(int id, String data) async {
+    var response = await apiRequest(
+      "${Constants.apiURL}/equipamento/editar_status/$id",
+      method: 'put',
+      body: data,
+    );
+
+    int? responseBody;
+    List<String> responseErrors;
+
+    (responseBody, responseErrors) = destructureResponse<int>(response);
+
+    if (responseErrors.isNotEmpty) {
+      throw ServiceException(responseErrors.join(","));
+    }
+
+    var item = responseBody;
+
+    return item;
   }
 
   @override

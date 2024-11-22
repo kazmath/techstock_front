@@ -1,21 +1,21 @@
 // ignore_for_file: prefer_const_literals_to_create_immutables, prefer_const_constructors
 
 import 'package:flutter/material.dart';
+import 'package:techstock_front/service/categoria_service.dart';
+import 'package:techstock_front/service/equipamento_service.dart';
 
 import '../pages/widgets.dart';
-import '../service/setor_service.dart';
-import '../service/usuario_service.dart';
 import '../tools/utils.dart';
 
-class AddEditUsuario extends StatelessWidget {
-  const AddEditUsuario({super.key, this.editMap});
+class AddEditEquipamento extends StatelessWidget {
+  const AddEditEquipamento({super.key, this.editMap});
 
   final Map<String, dynamic>? editMap;
 
   @override
   Widget build(BuildContext context) {
     return BaseAddEditDialog(
-      title: "${editMap != null ? "Editar" : "Cadastro de"} Usuário",
+      title: "${editMap != null ? "Editar" : "Cadastro de"} Equipamento",
       deleteButtonCallback: editMap?['id'] != null
           ? (result) async {
               if (result == null) return;
@@ -24,7 +24,7 @@ class AddEditUsuario extends StatelessWidget {
               Map<String, dynamic>? resultAPI = await apiRequestDialog(
                 context,
                 Future(() async {
-                  UsuarioService().deletar(id);
+                  EquipamentoService().deletar(id);
                   return result;
                 }),
               );
@@ -36,18 +36,17 @@ class AddEditUsuario extends StatelessWidget {
           : null,
       confirmButtonCallback: (result) async {
         if (result == null) return;
-        int id = editMap!['id'];
 
         Map<String, dynamic>? resultAPI = await apiRequestDialog(
           context,
           Future(() async {
             if (editMap != null) {
-              await UsuarioService().editar(
-                id,
+              await EquipamentoService().editar(
+                editMap!['id'],
                 result,
               );
             } else {
-              await UsuarioService().add(result);
+              await EquipamentoService().add(result);
             }
             return result;
           }),
@@ -61,27 +60,54 @@ class AddEditUsuario extends StatelessWidget {
         {
           'children': [
             {
-              'label': Text("Nome Completo"),
-              'field_name': 'nome',
-              if (editMap != null) 'defaultText': editMap!['nome'],
+              'label': Text("Tombamento"),
+              'field_name': 'tombamento',
+              if (editMap != null) 'defaultText': editMap!['tombamento'],
             },
             {
-              'label': Text("Código"),
-              'field_name': 'codigo',
-              if (editMap != null) 'defaultText': editMap!['codigo'],
+              'label': Text("Nome"),
+              'field_name': 'nome',
+              if (editMap != null) 'defaultText': editMap!['nome'],
             },
           ]
         },
         {
           'children': [
             {
-              'label': Text("Setor"),
-              'field_name': 'setorId',
-              if (editMap != null) 'defaultText': editMap!['setorId'],
-              'converter': (String value) => int.tryParse(value),
+              'label': Text("Fabricante"),
+              'field_name': 'fabricante',
+              if (editMap != null) 'defaultText': editMap!['fabricante'],
+            },
+            {
+              'label': Text("Ano de Fabricacao"),
+              'field_name': 'ano_fabricacao',
+              if (editMap != null) 'defaultText': editMap!['anoFabricacao'],
+            },
+          ],
+        },
+        {
+          'children': [
+            {
+              'label': Text("Especificação do Equipamento"),
+              'field_name': 'descricao',
+              if (editMap != null) 'defaultText': editMap!['descricao'],
+            },
+            {
+              'label': Text("Modelo"),
+              'field_name': 'modelo',
+              if (editMap != null) 'defaultText': editMap!['modelo'],
+            },
+          ],
+        },
+        {
+          'children': [
+            {
+              'label': Text("Categoria"),
+              'field_name': 'categoria',
+              if (editMap != null) 'defaultText': editMap!['categoriaId'],
               'fieldBuilder': (TextEditingController controller) {
                 return FutureBuilder(
-                  future: SetorService().listar(),
+                  future: CategoriaService().listar(),
                   builder: (context, snapshot) {
                     if (!snapshot.hasData) {
                       return InputDecorator(
@@ -89,7 +115,7 @@ class AddEditUsuario extends StatelessWidget {
                         child: LinearProgressIndicator(),
                       );
                     }
-
+                    editMap;
                     var initialValue = int.tryParse(controller.text);
                     return FormField<int>(
                       initialValue: initialValue,
@@ -165,78 +191,7 @@ class AddEditUsuario extends StatelessWidget {
                 );
               },
             },
-            {
-              'label': Text("E-mail"),
-              'field_name': 'email',
-              if (editMap != null) 'defaultText': editMap!['email'],
-              'validator': (String value) {
-                return RegExp(r'^[\w\-\.]+@([\w-]+\.)+[\w-]{2,}$')
-                        .hasMatch(value)
-                    ? null
-                    : "Email inválido";
-              },
-            },
-          ]
-        },
-        {
-          'children': [
-            {
-              'label': Text("Senha"),
-              'field_name': 'senha',
-              'defaultText': "",
-              'obscure': true,
-            },
-            {
-              'label': Text("Tipo de Usuário"),
-              'field_name': 'usuarioTipo',
-              if (editMap != null) 'defaultText': editMap!['usuarioTipo'],
-              'fieldBuilder': (TextEditingController controller) {
-                var initialValue = controller.text;
-                return FormField<String>(
-                  initialValue: initialValue,
-                  validator: (value) {
-                    if (value?.isEmpty ?? true) {
-                      return "Campo não pode ser vazio";
-                    }
-                    return null;
-                  },
-                  builder: (state) {
-                    return InputDecorator(
-                      decoration: InputDecoration(
-                        errorText: state.errorText,
-                        border: InputBorder.none,
-                      ),
-                      child: DropdownMenu<String>(
-                        initialSelection: initialValue,
-                        errorText: state.errorText,
-                        inputDecorationTheme: InputDecorationTheme(
-                          border: OutlineInputBorder(),
-                          errorStyle: TextStyle(fontSize: 0),
-                        ),
-                        expandedInsets: EdgeInsets.only(
-                          right: 4.0,
-                        ),
-                        onSelected: (value) {
-                          controller.text = value.toString();
-                          state.didChange(value);
-                        },
-                        dropdownMenuEntries: [
-                          DropdownMenuEntry(
-                            value: 'ADMIN',
-                            label: "Administrador",
-                          ),
-                          DropdownMenuEntry(
-                            value: 'USER',
-                            label: "Usuário",
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                );
-              },
-            },
-          ]
+          ],
         },
       ],
     );
