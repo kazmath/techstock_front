@@ -17,7 +17,7 @@ class CategoriaService extends IService {
   }
 
   @override
-  Future<bool> editar(int id, Map<String, dynamic> data) {
+  Future<int> editar(int id, Map<String, dynamic> data) {
     // TODO: implement editar
     throw UnimplementedError();
   }

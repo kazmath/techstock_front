@@ -327,6 +327,7 @@ class BaseDatabaseWidget extends StatelessWidget {
     this.borderRadius,
     this.prefixColumnRenderer,
     this.prefixColumnWidth,
+    this.filterFields,
   });
 
   final String title;
@@ -345,12 +346,29 @@ class BaseDatabaseWidget extends StatelessWidget {
   )? prefixColumnRenderer;
   final double? prefixColumnWidth;
 
+  final List<Map<String, dynamic>>? filterFields;
+
   @override
   Widget build(BuildContext context) {
     var controller = this.controller ?? TextEditingController();
     return BaseAppWithAuthCheck(
       title: title,
       titleActions: [
+        if (filterFields != null)
+          Padding(
+            padding: const EdgeInsets.only(right: 8.0),
+            child: IconButton.filled(
+              onPressed: () {}, // TODO
+              icon: const Icon(Icons.filter_alt),
+              style: ButtonStyle(
+                shape: WidgetStatePropertyAll(
+                  RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8.0),
+                  ),
+                ),
+              ),
+            ),
+          ),
         if (onSearch != null)
           Expanded(
             child: TextFormField(
@@ -719,12 +737,20 @@ class _BaseAddEditDialogState extends State<BaseAddEditDialog> {
                     ...widget.fields.map(
                       (map) {
                         Widget createField(Map<String, dynamic> signature) {
-                          var controller = TextEditingController();
-                          resultTuples.add((
-                            signature['field_name'],
-                            controller,
-                            signature['converter'],
-                          ));
+                          var controller = TextEditingController(
+                            text: signature['defaultText']?.toString(),
+                          );
+                          var inputDecoration = InputDecoration(
+                            border: const OutlineInputBorder(),
+                            hintText: signature['hint'] as String?,
+                          );
+                          if (signature['empty'] != true) {
+                            resultTuples.add((
+                              signature['field_name'],
+                              controller,
+                              signature['converter'],
+                            ));
+                          }
                           Widget widget;
                           if (signature['fieldBuilder'] != null) {
                             Widget Function(
@@ -732,21 +758,38 @@ class _BaseAddEditDialogState extends State<BaseAddEditDialog> {
                             ) builder = signature['fieldBuilder'];
                             widget = builder(controller);
                           } else {
-                            widget = TextFormField(
-                              controller: controller,
-                              decoration: InputDecoration(
-                                border: const OutlineInputBorder(),
-                                hintText: signature['hint'] as String?,
-                              ),
-                              validator: (value) {
-                                if (signature['validator'] != null) {
-                                  return signature['validator']!(value);
-                                }
+                            bool showPassword = signature['obscure'] == null;
+                            widget = StatefulBuilder(
+                              builder: (context, setInnerState) {
+                                return TextFormField(
+                                  controller: controller,
+                                  obscureText: !showPassword,
+                                  decoration: inputDecoration.copyWith(
+                                    suffixIcon: signature['obscure'] != null
+                                        ? IconButton(
+                                            onPressed: () => setInnerState(() {
+                                              showPassword = !showPassword;
+                                            }),
+                                            icon: Icon(
+                                              showPassword
+                                                  ? Icons
+                                                      .visibility_off_outlined
+                                                  : Icons.visibility_outlined,
+                                            ),
+                                          )
+                                        : null,
+                                  ),
+                                  validator: (value) {
+                                    if (signature['validator'] != null) {
+                                      return signature['validator']!(value);
+                                    }
 
-                                if (value?.isEmpty ?? true) {
-                                  return "Campo não pode ser vazio";
-                                }
-                                return null;
+                                    if (value?.isEmpty ?? true) {
+                                      return "Campo não pode ser vazio";
+                                    }
+                                    return null;
+                                  },
+                                );
                               },
                             );
                           }
@@ -763,7 +806,13 @@ class _BaseAddEditDialogState extends State<BaseAddEditDialog> {
                                       style: textTheme.titleLarge!,
                                       child: signature['label'] as Widget,
                                     ),
-                                  widget,
+                                  signature['empty'] == true
+                                      ? TextFormField(
+                                          decoration: inputDecoration.copyWith(
+                                            enabled: false,
+                                          ),
+                                        )
+                                      : widget,
                                 ],
                               ),
                             ),
@@ -776,7 +825,9 @@ class _BaseAddEditDialogState extends State<BaseAddEditDialog> {
                             children: [
                               ...(map['children'] as List<Map<String, dynamic>>)
                                   .map(
-                                (signatureInner) => createField(signatureInner),
+                                (signatureInner) {
+                                  return createField(signatureInner);
+                                },
                               ),
                             ],
                           );

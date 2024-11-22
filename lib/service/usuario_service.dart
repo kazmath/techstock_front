@@ -89,15 +89,46 @@ class UsuarioService extends IService {
   }
 
   @override
-  Future<bool> deletar(int id) {
-    // TODO: implement deletar
-    throw UnimplementedError();
+  Future<bool> deletar(int id) async {
+    var response = await apiRequest(
+      "${Constants.apiURL}/usuario/$id",
+      method: 'delete',
+    );
+
+    bool responseBody;
+    List<String> responseErrors;
+
+    (responseBody, responseErrors) = destructureResponse<bool>(response);
+
+    if (responseErrors.isNotEmpty) {
+      throw ServiceException(responseErrors.join(","));
+    }
+
+    var item = responseBody;
+
+    return item;
   }
 
   @override
-  Future<bool> editar(int id, Map<String, dynamic> data) {
-    // TODO: implement editar
-    throw UnimplementedError();
+  Future<int> editar(int id, Map<String, dynamic> data) async {
+    var response = await apiRequest(
+      "${Constants.apiURL}/usuario/$id",
+      method: 'put',
+      body: data,
+    );
+
+    int responseBody;
+    List<String> responseErrors;
+
+    (responseBody, responseErrors) = destructureResponse<int>(response);
+
+    if (responseErrors.isNotEmpty) {
+      throw ServiceException(responseErrors.join(","));
+    }
+
+    var item = responseBody;
+
+    return item;
   }
 
   @override

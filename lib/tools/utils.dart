@@ -304,3 +304,44 @@ Color getContrastColor(Color color) {
 
   return luminance > .5 ? Colors.black : Colors.white;
 }
+
+Future<Map<String, dynamic>?> apiRequestDialog(
+  BuildContext context,
+  Future<Map<String, dynamic>?> future,
+) async {
+  return await showDialog<Map<String, dynamic>>(
+    context: context,
+    barrierDismissible: false,
+    builder: (context) => PopScope(
+      canPop: false,
+      child: FutureBuilder(
+        future: future,
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            Navigator.pop(context, snapshot.data);
+          }
+
+          if (snapshot.hasError) {
+            if (snapshot.error is ServiceException) {
+              return AlertOkDialog(
+                title: Text("Erro"),
+                content: Text(
+                  (snapshot.error as ServiceException).cause,
+                ),
+              );
+            }
+
+            return UnknownErrorDialog(
+              exception: snapshot.error!,
+              stacktrace: snapshot.stackTrace!,
+            );
+          }
+
+          return Center(
+            child: CircularProgressIndicator(),
+          );
+        },
+      ),
+    ),
+  );
+}
