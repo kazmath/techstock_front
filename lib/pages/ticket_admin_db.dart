@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:pluto_grid/pluto_grid.dart';
-import 'package:techstock_front/pages/widgets.dart';
-import 'package:techstock_front/service/categoria_service.dart';
-import 'package:techstock_front/service/equipamento_service.dart';
-import 'package:techstock_front/service/ticket_service.dart';
-import 'package:techstock_front/service/usuario_service.dart';
-import 'package:techstock_front/tools/utils.dart';
 
+import '../service/categoria_service.dart';
+import '../service/equipamento_service.dart';
+import '../service/ticket_service.dart';
+import '../service/usuario_service.dart';
 import '../tools/constants.dart';
+import '../tools/utils.dart';
+import 'widgets.dart';
 
 class TicketsAdmin extends StatefulWidget {
   const TicketsAdmin({super.key});
@@ -94,11 +94,11 @@ class _TicketsAdminState extends State<TicketsAdmin> {
         : BaseDatabaseWidget(
             title: "Reservas",
             service: TicketService(),
-            onAdd: (controller) {}, // TODO
+            // onAdd: (controller) {}, // TODO
             onSearch: (controller) {}, // TODO
             columns: {
               'id': {
-                'title': "Num. Ticket",
+                'title': "Num. Reserva",
                 'type': PlutoColumnType.text(),
               },
               'equipamentoId': {

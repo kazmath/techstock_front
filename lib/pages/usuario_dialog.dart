@@ -1,10 +1,11 @@
 // ignore_for_file: prefer_const_literals_to_create_immutables, prefer_const_constructors
 
 import 'package:flutter/material.dart';
-import 'package:techstock_front/pages/widgets.dart';
-import 'package:techstock_front/service/setor_service.dart';
-import 'package:techstock_front/service/usuario_service.dart';
-import 'package:techstock_front/tools/utils.dart';
+
+import '../pages/widgets.dart';
+import '../service/setor_service.dart';
+import '../service/usuario_service.dart';
+import '../tools/utils.dart';
 
 class AddEditUsuario extends StatelessWidget {
   const AddEditUsuario({super.key, this.editMap});

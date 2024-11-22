@@ -5,9 +5,25 @@ import 'service.dart';
 
 class TicketService extends IService {
   @override
-  Future<int> add(Map<String, dynamic> map) {
-    // TODO: implement add
-    throw UnimplementedError();
+  Future<int> add(Map<String, dynamic> map) async {
+    var response = await apiRequest(
+      "${Constants.apiURL}/ticket",
+      body: map,
+    );
+
+    int? responseBody;
+    List<String> responseErrors;
+
+    (responseBody, responseErrors) =
+        destructureResponse<Map<String, dynamic>>(response);
+
+    if (responseErrors.isNotEmpty) {
+      throw ServiceException(responseErrors.join(","));
+    }
+
+    var items = responseBody;
+
+    return items!;
   }
 
   @override

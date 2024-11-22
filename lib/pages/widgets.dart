@@ -13,7 +13,6 @@ import '../tools/exceptions.dart';
 class BaseApp extends StatelessWidget {
   const BaseApp({
     super.key,
-    required this.title,
     required this.child,
     this.titleActions,
     this.leading,
@@ -21,7 +20,6 @@ class BaseApp extends StatelessWidget {
     this.titleAlignment,
   });
 
-  final String title;
   final List<Widget>? titleActions;
   final Widget child;
   final Widget? leading;
@@ -43,9 +41,8 @@ class BaseApp extends StatelessWidget {
           ),
           child: Row(
             mainAxisSize: MainAxisSize.max,
-            // mainAxisAlignment: MainAxisAlignment.end,
+            mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              Expanded(child: appBarTitle ?? Text(title)),
               IconButton(
                 onPressed: () {},
                 icon: const Icon(Icons.notifications),
@@ -87,7 +84,6 @@ class BaseAppWithAuthCheck extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BaseApp(
-      title: title,
       child: FutureBuilder(
         future: TicketService().listar(),
         builder: (context, snapshot) {
@@ -711,7 +707,6 @@ class _BaseAddEditDialogState extends State<BaseAddEditDialog> {
     final fontSize = textTheme.bodyMedium!.fontSize!;
 
     return BaseApp(
-      title: "",
       child: Center(
         child: Container(
           padding: const EdgeInsets.all(30.0),
