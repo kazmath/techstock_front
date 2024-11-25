@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:pluto_grid/pluto_grid.dart';
 
 import '../service/categoria_service.dart';
@@ -84,21 +85,71 @@ class _TicketsUsuarioState extends State<TicketsUsuario> {
         : BaseDatabaseWidget(
             title: "Reservas",
             service: TicketService(),
-            onAdd: (controller) async {
+            onAdd: (rows) async {
+              listaEquipamentos;
+              var equipamentosDisponiveis = listaEquipamentos
+                  ?.where(
+                    (element) => element['status'] == 'D',
+                  )
+                  .toList();
+
+              // if (equipamentosDisponiveis?.isEmpty ?? true) {
+              //   await showDialog(
+              //     context: context,
+              //     builder: (context) => const AlertOkDialog(
+              //       title: Text("Aviso"),
+              //       content: Text("Nenhum equipamento disponível"),
+              //     ),
+              //   );
+              //   return;
+              // }
+
+              var reservasFeitasHoje = rows?.where(
+                (row) {
+                  var currentDate = DateFormat("dd/MM/yyyy HH:mm").tryParse(
+                    row.cells['dt_abertura']?.value as String? ?? "",
+                  );
+
+                  return (currentDate?.difference(DateTime.now()).inDays ?? 0) <
+                      1;
+                },
+              ).toList();
+              var categoriasEsgotadasHoje = <int>{};
+              var reservasFiltradasHoje = reservasFeitasHoje?.where(
+                (row) {
+                  var categoriaId = row.cells['categoria']?.value as int?;
+                  if (categoriaId == null) {
+                    return true;
+                  }
+
+                  return categoriasEsgotadasHoje.add(categoriaId);
+                },
+              ).toList();
+              equipamentosDisponiveis = equipamentosDisponiveis?.where(
+                (element) {
+                  return !categoriasEsgotadasHoje
+                      .contains(element['categoriaId']);
+                },
+              ).toList();
+
+              // if (equipamentosDisponiveis?.isEmpty ?? true) {
+              //   await showDialog(
+              //     context: context,
+              //     builder: (context) => const AlertOkDialog(
+              //       title: Text("Aviso"),
+              //       content: Text("Não é possível fazer mais reservas hoje"),
+              //     ),
+              //   );
+              //   return;
+              // }
+
               var result = await showDialog<List<int>>(
                 context: context,
                 builder: (context) => const AddTicket(),
               );
               if (result != null) setState(() {});
             },
-            onSearch: (controller) {
-              if (controller.text == "") {
-                filtro.remove('query');
-              } else {
-                filtro['query'] = controller.text;
-              }
-              setState(() {});
-            }, // TODO
+            doSearch: true, // TODO
             columns: {
               'id': {
                 'title': "Num. Reserva",
@@ -147,8 +198,14 @@ class _TicketsUsuarioState extends State<TicketsUsuario> {
                       ?.where((element) => element['id'] == categoriaId)
                       .singleOrNull;
 
+                  rendererContext.cell.value = categoria?['id'];
+
                   return Center(child: Text(categoria?['nome'] ?? "-"));
                 },
+              },
+              'dt_abertura': {
+                'title': "Data de Abertura",
+                'type': PlutoColumnType.text(),
               },
               'dt_reserva': {
                 'title': "Data",

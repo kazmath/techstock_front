@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:pluto_grid/pluto_grid.dart';
-import 'package:techstock_front/tools/exceptions.dart';
 
 import '../service/categoria_service.dart';
 import '../service/equipamento_service.dart';
 import '../service/ticket_service.dart';
 import '../service/usuario_service.dart';
 import '../tools/constants.dart';
+import '../tools/exceptions.dart';
 import '../tools/utils.dart';
 import 'widgets.dart';
 
@@ -27,7 +27,12 @@ class _TicketsAdminState extends State<TicketsAdmin> {
 
   List<Object?> errors = List.empty(growable: true);
 
-  Map<String, dynamic> filtro = {};
+  var filtro = KeyValueNotifier<String, dynamic>({});
+  var dataController = ValueNotifier<DateTime?>(null);
+  var dataController2 = ValueNotifier<DateTime?>(null);
+  var statusController = ValueNotifier<String?>(null);
+  var usuarioIdController = ValueNotifier<int?>(null);
+  var categoriaIdController = ValueNotifier<int?>(null);
 
   @override
   void initState() {
@@ -97,15 +102,129 @@ class _TicketsAdminState extends State<TicketsAdmin> {
         : BaseDatabaseWidget(
             title: "Reservas",
             service: TicketService(),
-            // onAdd: (controller) {}, // TODO
-            onSearch: (controller) {
-              if (controller.text == "") {
-                filtro.remove('query');
-              } else {
-                filtro['query'] = controller.text;
-              }
-              setState(() {});
-            }, // TODO
+            filtro: filtro,
+            doSearch: true,
+            filtroFields: [
+              {
+                'field': "dt_reserva_begin",
+                'label': "Data de Início",
+                'controller': dataController,
+                'widget': DateFormField(
+                  validator: (value) {
+                    var other = dataController2.value;
+                    if (other != null && (value?.isAfter(other) ?? false)) {
+                      return "Não pode ser depois de data final";
+                    }
+                    return null;
+                  },
+                  dataController: dataController,
+                ),
+                'value_converter': (value) {
+                  return value != null
+                      ? Constants.apiDateFormat.format(value)
+                      : null;
+                }
+              },
+              {
+                'field': "dt_reserva_end",
+                'label': "Data de Fim",
+                'controller': dataController2,
+                'widget': DateFormField(
+                  validator: (value) {
+                    var other = dataController.value;
+                    if (other != null && (value?.isBefore(other) ?? false)) {
+                      return "Não pode ser antes de data inicial";
+                    }
+                    return null;
+                  },
+                  dataController: dataController2,
+                ),
+                'value_converter': (value) {
+                  return value != null
+                      ? Constants.apiDateFormat.format(value)
+                      : null;
+                }
+              },
+              {
+                'field': 'status',
+                'label': "Status",
+                'controller': statusController,
+                'value_converter': (value) {
+                  return value?.value;
+                },
+                'widget': FormField(
+                  builder: (state) {
+                    listaStatuses;
+                    return DropdownMenu(
+                      onSelected: (value) {},
+                      expandedInsets: EdgeInsets.zero,
+                      dropdownMenuEntries: [
+                        const DropdownMenuEntry(
+                          value: null,
+                          label: "",
+                        ),
+                        ...?listaStatuses?.map(
+                          (e) => DropdownMenuEntry<String?>(
+                            value: e['codigo'],
+                            label: e['descricao'],
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              },
+              // {
+              //   'field': 'usuarioId',
+              //   'label': "usuarioId",
+              //   'controller': usuarioIdController,
+              //   'widget': FormField(
+              //     builder: (state) {
+              //       listaUsuarios;
+              //       return DropdownMenu(
+              //         expandedInsets: EdgeInsets.zero,
+              //         dropdownMenuEntries: [
+              //           ...?listaUsuarios?.map(
+              //             (e) => DropdownMenuEntry<int>(
+              //               value: e['id'],
+              //               label: e['nome'],
+              //             ),
+              //           ),
+              //         ],
+              //       );
+              //     },
+              //   ),
+              // },
+              {
+                'field': 'categoriaId',
+                'label': "Categoria",
+                'controller': categoriaIdController,
+                'value_converter': (value) {
+                  return value?.value;
+                },
+                'widget': FormField(
+                  builder: (state) {
+                    listaCategorias;
+                    return DropdownMenu(
+                      expandedInsets: EdgeInsets.zero,
+                      enableFilter: true,
+                      dropdownMenuEntries: [
+                        const DropdownMenuEntry(
+                          value: null,
+                          label: "",
+                        ),
+                        ...?listaCategorias?.map(
+                          (e) => DropdownMenuEntry<int>(
+                            value: e['id'],
+                            label: e['nome'],
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              },
+            ],
             columns: {
               'id': {
                 'title': "Num. Reserva",
@@ -156,6 +275,10 @@ class _TicketsAdminState extends State<TicketsAdmin> {
 
                   return Center(child: Text(categoria?['nome'] ?? "-"));
                 },
+              },
+              'dt_abertura': {
+                'title': "Data de Abertura",
+                'type': PlutoColumnType.text(),
               },
               'dt_reserva': {
                 'title': "Data",

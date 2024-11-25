@@ -7,12 +7,14 @@ import 'service.dart';
 
 class UsuarioDTO {
   UsuarioDTO({
+    required this.nome,
     required this.token,
     required this.codigo,
     required this.email,
     required this.permissions,
   });
 
+  final String? nome;
   final String token;
   final String? codigo;
   final String? email;
@@ -37,6 +39,7 @@ class UsuarioService extends IService {
       if (token == null) return null;
 
       _usuario = UsuarioDTO(
+        nome: sharedPreferences.getString('nome'),
         token: token,
         codigo: sharedPreferences.getString('codigo'),
         email: sharedPreferences.getString('email'),
@@ -218,6 +221,10 @@ class UsuarioService extends IService {
       String? email = responseBody['email'];
       if (email == null) return false;
       sharedPreferences.setString('email', email);
+
+      String? nome = responseBody['nome'];
+      if (nome == null) return false;
+      sharedPreferences.setString('nome', nome);
 
       String? codigo = responseBody['codigo'];
       if (codigo == null) return false;

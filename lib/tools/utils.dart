@@ -4,10 +4,9 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:intl/intl.dart';
-import 'package:techstock_front/pages/login.dart';
-import 'package:techstock_front/pages/widgets.dart';
 
+import '../pages/login.dart';
+import '../pages/widgets.dart';
 import '../service/usuario_service.dart';
 import 'constants.dart';
 import 'exceptions.dart';
@@ -61,7 +60,7 @@ String jsonify<T>(T input) {
     if (element is List) return treatElementsList(element);
     if (element is Map) return treatElementsMap(element);
 
-    if (element is DateTime) return DateFormat("yyyy-MM-dd").format(element);
+    if (element is DateTime) return Constants.apiDateFormat.format(element);
 
     return element;
   }
@@ -346,4 +345,43 @@ Future<Map<String, dynamic>?> apiRequestDialog(
       ),
     ),
   );
+}
+
+class KeyValueNotifier<K, V>
+    with ChangeNotifier
+    implements ValueListenable<Map<K, V>> {
+  KeyValueNotifier(this._value);
+
+  Map<K, V> _value;
+
+  @override
+  Map<K, V> get value {
+    return this._value;
+  }
+
+  set value(Map<K, V> newValue) {
+    this._value = newValue;
+    notifyListeners();
+  }
+
+  operator [](K key) {
+    return _value[key];
+  }
+
+  operator []=(K key, V newValue) {
+    _value[key] = newValue;
+    notifyListeners();
+  }
+
+  void remove(String s) {
+    _value.remove(s);
+    notifyListeners();
+  }
+}
+
+String? stringValidator(String? value) {
+  if (value?.isEmpty ?? true) {
+    return "Campo não pode estar vazio";
+  }
+  return null;
 }

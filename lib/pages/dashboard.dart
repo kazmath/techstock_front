@@ -36,7 +36,7 @@ class Dashboard extends StatelessWidget {
                     {
                       'icon': Icons.confirmation_num_outlined,
                       'color': Color(0xFF082F61),
-                      'label': "TOTAL DE TICKETS",
+                      'label': "TOTAL DE RESERVAS",
                       'future': Future.value("190"),
                       'onTap': () => Navigator.pushNamed(
                             context,

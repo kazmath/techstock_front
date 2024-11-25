@@ -35,6 +35,8 @@ dependencies:
   pluto_grid: ^8.0.0
   http: ^1.2.2
   intl: ^0.19.0
+  flutter_localizations:
+    sdk: flutter
 
 dev_dependencies:
   flutter_test:

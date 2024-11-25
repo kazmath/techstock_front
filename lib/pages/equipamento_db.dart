@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:pluto_grid/pluto_grid.dart';
-import 'package:techstock_front/pages/equipamento_dialog.dart';
-import 'package:techstock_front/pages/widgets.dart';
-import 'package:techstock_front/service/categoria_service.dart';
-import 'package:techstock_front/service/equipamento_service.dart';
-import 'package:techstock_front/tools/exceptions.dart';
-import 'package:techstock_front/tools/utils.dart';
 
+import '../service/categoria_service.dart';
+import '../service/equipamento_service.dart';
 import '../tools/constants.dart';
+import '../tools/exceptions.dart';
+import '../tools/utils.dart';
+import 'equipamento_dialog.dart';
+import 'widgets.dart';
 
 class Equipamentos extends StatefulWidget {
   const Equipamentos({super.key, this.initialFilter});
@@ -26,7 +26,9 @@ class _EquipamentosState extends State<Equipamentos> {
 
   List<Object?> errors = List.empty(growable: true);
 
-  Map<String, dynamic> filtro = {};
+  var filtro = KeyValueNotifier<String, dynamic>({});
+  var statusController = ValueNotifier<String?>(null);
+  var categoriaIdController = ValueNotifier<int?>(null);
 
   @override
   void initState() {
@@ -74,7 +76,6 @@ class _EquipamentosState extends State<Equipamentos> {
         : BaseDatabaseWidget(
             title: "Equipamentos",
             service: EquipamentoService(),
-            filterFields: [],
             onAdd: (controller) async {
               var result = await showDialog<Map<String, dynamic>>(
                 context: context,
@@ -82,14 +83,89 @@ class _EquipamentosState extends State<Equipamentos> {
               );
               if (result != null) setState(() {});
             },
-            onSearch: (controller) {
-              if (controller.text == "") {
-                filtro.remove('query');
-              } else {
-                filtro['query'] = controller.text;
-              }
-              setState(() {});
-            },
+            filtro: filtro,
+            doSearch: true,
+            filtroFields: [
+              {
+                'field': 'status',
+                'label': "Status",
+                'controller': statusController,
+                'value_converter': (value) {
+                  return value?.value;
+                },
+                'widget': FormField(
+                  builder: (state) {
+                    listaStatuses;
+                    return DropdownMenu(
+                      onSelected: (value) {},
+                      expandedInsets: EdgeInsets.zero,
+                      dropdownMenuEntries: [
+                        const DropdownMenuEntry(
+                          value: null,
+                          label: "",
+                        ),
+                        ...?listaStatuses?.map(
+                          (e) => DropdownMenuEntry<String?>(
+                            value: e['codigo'],
+                            label: e['descricao'],
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              },
+              // {
+              //   'field': 'usuarioId',
+              //   'label': "usuarioId",
+              //   'controller': usuarioIdController,
+              //   'widget': FormField(
+              //     builder: (state) {
+              //       listaUsuarios;
+              //       return DropdownMenu(
+              //         expandedInsets: EdgeInsets.zero,
+              //         dropdownMenuEntries: [
+              //           ...?listaUsuarios?.map(
+              //             (e) => DropdownMenuEntry<int>(
+              //               value: e['id'],
+              //               label: e['nome'],
+              //             ),
+              //           ),
+              //         ],
+              //       );
+              //     },
+              //   ),
+              // },
+              {
+                'field': 'categoriaId',
+                'label': "Categoria",
+                'controller': categoriaIdController,
+                'value_converter': (value) {
+                  return value?.value;
+                },
+                'widget': FormField(
+                  builder: (state) {
+                    listaCategorias;
+                    return DropdownMenu(
+                      expandedInsets: EdgeInsets.zero,
+                      enableFilter: true,
+                      dropdownMenuEntries: [
+                        const DropdownMenuEntry(
+                          value: null,
+                          label: "",
+                        ),
+                        ...?listaCategorias?.map(
+                          (e) => DropdownMenuEntry<int>(
+                            value: e['id'],
+                            label: e['nome'],
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              },
+            ],
             prefixColumnRenderer: (PlutoColumnRendererContext rendererContext) {
               return IconButton(
                 onPressed: () async {

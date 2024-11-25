@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:pluto_grid/pluto_grid.dart';
-import 'package:techstock_front/pages/widgets.dart';
-import 'package:techstock_front/service/categoria_service.dart';
-import 'package:techstock_front/service/equipamento_service.dart';
-import 'package:techstock_front/service/movimentacao_service.dart';
-import 'package:techstock_front/service/ticket_service.dart';
-import 'package:techstock_front/service/usuario_service.dart';
-import 'package:techstock_front/tools/utils.dart';
 
+import '../service/categoria_service.dart';
+import '../service/equipamento_service.dart';
+import '../service/movimentacao_service.dart';
+import '../service/ticket_service.dart';
+import '../service/usuario_service.dart';
 import '../tools/constants.dart';
+import '../tools/utils.dart';
+import 'widgets.dart';
 
 class Movimentacoes extends StatefulWidget {
   const Movimentacoes({super.key});
@@ -29,6 +29,8 @@ class _MovimentacoesState extends State<Movimentacoes> {
   Map<int, dynamic> listaUsuariosCache = {};
 
   List<Object?> errors = List.empty(growable: true);
+
+  var filtro = KeyValueNotifier<String, dynamic>({});
 
   @override
   void initState() {
@@ -97,7 +99,8 @@ class _MovimentacoesState extends State<Movimentacoes> {
         : BaseDatabaseWidget(
             title: "Movimentações",
             service: MovimentacaoService(),
-            onSearch: (controller) {}, // TODO
+            filtro: filtro,
+            doSearch: true,
             columns: {
               'id': {
                 'title': "Id",

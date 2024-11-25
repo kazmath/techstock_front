@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:techstock_front/pages/dashboard.dart';
-import 'package:techstock_front/pages/equipamento_db.dart';
-import 'package:techstock_front/pages/movimentacao_db.dart';
-import 'package:techstock_front/pages/ticket_admin_db.dart';
-import 'package:techstock_front/pages/ticket_usuario_db.dart';
-import 'package:techstock_front/pages/usuario_db.dart';
+import 'package:intl/intl.dart';
 
+import '../pages/dashboard.dart';
+import '../pages/equipamento_db.dart';
+import '../pages/movimentacao_db.dart';
+import '../pages/ticket_admin_db.dart';
+import '../pages/ticket_usuario_db.dart';
+import '../pages/usuario_db.dart';
 import 'ui_web_stub.dart' // Stub implementation
     if (dart.library.html) 'dart:ui_web'; // dart:html implementation
 
@@ -17,6 +18,8 @@ class Constants {
 
   static const hostURL = "http://localhost:8090";
   static const apiURL = "$hostURL/api";
+
+  static final apiDateFormat = DateFormat("yyyy-MM-dd");
 
   static String get baseHref {
     var path = const BrowserPlatformLocation().getBaseHref() != null

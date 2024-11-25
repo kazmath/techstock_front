@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:techstock_front/pages/dashboard.dart';
-import 'package:techstock_front/pages/ticket_admin_db.dart';
-import 'package:techstock_front/pages/ticket_usuario_db.dart';
+import 'dashboard.dart';
+import 'ticket_admin_db.dart';
+import 'ticket_usuario_db.dart';
 
 import '../service/usuario_service.dart';
 import '../tools/constants.dart';

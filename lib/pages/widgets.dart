@@ -1,14 +1,15 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:pluto_grid/pluto_grid.dart';
-import 'package:techstock_front/service/ticket_service.dart';
-import 'package:techstock_front/tools/constants.dart';
-import 'package:techstock_front/tools/utils.dart';
 
 import '../service/service.dart';
+import '../service/ticket_service.dart';
 import '../service/usuario_service.dart';
+import '../tools/constants.dart';
 import '../tools/exceptions.dart';
+import '../tools/utils.dart';
 
 class BaseApp extends StatelessWidget {
   const BaseApp({
@@ -18,6 +19,8 @@ class BaseApp extends StatelessWidget {
     this.leading,
     this.appBarTitle,
     this.titleAlignment,
+    this.scaffoldKey,
+    this.endDrawer,
   });
 
   final List<Widget>? titleActions;
@@ -26,9 +29,13 @@ class BaseApp extends StatelessWidget {
   final Widget? appBarTitle;
   final AlignmentGeometry? titleAlignment;
 
+  final Key? scaffoldKey;
+  final Widget? endDrawer;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: scaffoldKey,
       appBar: AppBar(
         backgroundColor: getColorScheme(context).secondary,
         foregroundColor: getColorScheme(context).onSecondary,
@@ -57,6 +64,7 @@ class BaseApp extends StatelessWidget {
         ),
       ),
       drawer: GlobalDrawer(),
+      endDrawer: endDrawer,
       backgroundColor: const Color(0xFFD6D6D6),
       body: child,
     );
@@ -70,20 +78,25 @@ class BaseAppWithAuthCheck extends StatelessWidget {
     required this.child,
     this.titleActions,
     this.leading,
-    this.appBarTitle,
     this.titleAlignment,
+    this.scaffoldKey,
+    this.endDrawer,
   });
 
   final String title;
   final List<Widget>? titleActions;
   final Widget child;
   final Widget? leading;
-  final Widget? appBarTitle;
   final AlignmentGeometry? titleAlignment;
+
+  final Key? scaffoldKey;
+  final Widget? endDrawer;
 
   @override
   Widget build(BuildContext context) {
     return BaseApp(
+      scaffoldKey: scaffoldKey,
+      endDrawer: endDrawer,
       child: FutureBuilder(
         future: TicketService().listar(),
         builder: (context, snapshot) {
@@ -129,6 +142,7 @@ class BaseAppWithAuthCheck extends StatelessWidget {
                           child: SizedBox(
                             height: 42,
                             child: Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
                               children: titleActions!,
                             ),
                           ),
@@ -170,12 +184,12 @@ class GlobalDrawer extends StatelessWidget {
                   children: [
                     const Divider(color: Colors.transparent),
                     Text(
-                      snapshot.data?.email ?? "-",
+                      snapshot.data?.nome ?? "-",
                       style: Theme.of(context).textTheme.titleLarge,
                     ),
                     const Divider(color: Colors.transparent),
                     Text(
-                      snapshot.data?.codigo ?? "-",
+                      snapshot.data?.email ?? "-",
                       style: Theme.of(context).textTheme.titleLarge,
                     ),
                     const Divider(color: Colors.transparent),
@@ -317,14 +331,15 @@ class BaseDatabaseWidget extends StatelessWidget {
     required this.title,
     required this.service,
     required this.columns,
-    this.controller,
-    this.onSearch,
+    this.searchController,
+    this.doSearch = false,
     this.onAdd,
     this.borderRadius,
     this.prefixColumnRenderer,
     this.prefixColumnWidth,
     this.filtro,
-    this.filterFields,
+    this.filtroFields,
+    this.scaffoldKey,
   });
 
   final String title;
@@ -333,30 +348,197 @@ class BaseDatabaseWidget extends StatelessWidget {
   final Map<String, Map<String, dynamic>> columns;
   final BorderRadiusGeometry? borderRadius;
 
-  final TextEditingController? controller;
-  final void Function(TextEditingController controller)? onSearch;
+  final TextEditingController? searchController;
+  final bool doSearch;
 
-  final void Function(TextEditingController controller)? onAdd;
+  final FutureOr<void> Function(List<PlutoRow>? rows)? onAdd;
 
   final Widget Function(
     PlutoColumnRendererContext rendererContext,
   )? prefixColumnRenderer;
   final double? prefixColumnWidth;
 
-  final Map<String, dynamic>? filtro;
-  final List<Map<String, dynamic>>? filterFields;
+  final KeyValueNotifier<String, dynamic>? filtro;
+  final List<Map<String, dynamic>>? filtroFields;
+
+  final scaffoldKey;
+
+  void onSearch(TextEditingController controller) {
+    filtro?['query'] = controller.text;
+  }
 
   @override
   Widget build(BuildContext context) {
-    var controller = this.controller ?? TextEditingController();
+    TextEditingController searchController =
+        this.searchController ?? TextEditingController();
+    GlobalKey<ScaffoldState> scaffoldKey =
+        this.scaffoldKey ?? GlobalKey<ScaffoldState>();
+    GlobalKey<FormState> formKey = GlobalKey<FormState>();
+
+    var mapFields = <String,
+        (
+      ValueNotifier,
+      dynamic Function(
+        dynamic value,
+      ),
+    )>{};
+
+    List<PlutoRow>? rowList;
+
     return BaseAppWithAuthCheck(
+      scaffoldKey: scaffoldKey,
+      endDrawer: [filtro, filtroFields].contains(null)
+          ? null
+          : Drawer(
+              child: Padding(
+                padding: const EdgeInsets.all(30.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Filtrar por",
+                      style: Theme.of(context)
+                          .textTheme
+                          .displaySmall!
+                          .copyWith(color: getColorScheme(context).secondary),
+                    ),
+                    const Divider(height: 40.0),
+                    Expanded(
+                      child: SingleChildScrollView(
+                        child: Form(
+                          key: formKey,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: filtroFields!.map(
+                              (current) {
+                                ValueNotifier controller =
+                                    current['controller'] ??
+                                        TextEditingController();
+                                dynamic Function(
+                                  dynamic value,
+                                ) valueConverter = current['value_converter'] ??
+                                    (value) {
+                                      return value?.toString();
+                                    };
+
+                                mapFields[current['field']!] = (
+                                  controller,
+                                  valueConverter,
+                                );
+
+                                return Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      if (current['label'] != null)
+                                        Text(
+                                          current['label'],
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .titleLarge!
+                                              .copyWith(
+                                                color: getColorScheme(context)
+                                                    .secondary,
+                                              ),
+                                        ),
+                                      current['widget'] ??
+                                          TextFormField(
+                                            controller:
+                                                mapFields[current['field']!]
+                                                    as TextEditingController,
+                                            validator: current['validator'] ??
+                                                stringValidator,
+                                            decoration: const InputDecoration(
+                                              border: OutlineInputBorder(),
+                                            ),
+                                          ),
+                                    ],
+                                  ),
+                                );
+                              },
+                            ).toList(),
+                          ),
+                        ),
+                      ),
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: FilledButton(
+                            onPressed: () {
+                              if (formKey.currentState?.validate() != true) {
+                                return;
+                              }
+
+                              var newFilter = <String, dynamic>{};
+                              for (var field in mapFields.entries) {
+                                var newValue =
+                                    field.value.$2(field.value.$1.value);
+                                newFilter[field.key] = newValue;
+                              }
+
+                              newFilter.removeWhere(
+                                (_, value) => value == null,
+                              );
+
+                              filtro!.value = newFilter;
+
+                              scaffoldKey.currentState?.closeEndDrawer();
+                            },
+                            style: ButtonStyle(
+                              shape: WidgetStatePropertyAll(
+                                RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8.0),
+                                ),
+                              ),
+                              backgroundColor: WidgetStatePropertyAll(
+                                getColorScheme(context).primary,
+                              ),
+                              foregroundColor: WidgetStatePropertyAll(
+                                getColorScheme(context).onPrimary,
+                              ),
+                            ),
+                            child: const Text("Filtrar"),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: FilledButton(
+                            onPressed: () {},
+                            child: Text("Voltar"),
+                            style: ButtonStyle(
+                              shape: WidgetStatePropertyAll(
+                                RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8.0),
+                                ),
+                              ),
+                              backgroundColor: WidgetStatePropertyAll(
+                                getColorScheme(context).surfaceContainerHighest,
+                              ),
+                              foregroundColor: WidgetStatePropertyAll(
+                                getColorScheme(context).onSurfaceVariant,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
       title: title,
       titleActions: [
-        if (filterFields != null)
+        if (![filtro, filtroFields].contains(null))
           Padding(
             padding: const EdgeInsets.only(right: 8.0),
             child: IconButton.filled(
-              onPressed: () {}, // TODO
+              // TODO
+              onPressed: () => scaffoldKey.currentState?.openEndDrawer(),
               icon: const Icon(Icons.filter_alt),
               style: ButtonStyle(
                 shape: WidgetStatePropertyAll(
@@ -367,11 +549,11 @@ class BaseDatabaseWidget extends StatelessWidget {
               ),
             ),
           ),
-        if (onSearch != null)
+        if (filtro != null && doSearch)
           Expanded(
             child: TextFormField(
-              controller: controller,
-              onFieldSubmitted: (_) => onSearch!(controller),
+              controller: searchController,
+              onFieldSubmitted: (_) => onSearch(searchController),
               decoration: InputDecoration(
                 filled: true,
                 hintText: "Pesquisar...",
@@ -387,7 +569,7 @@ class BaseDatabaseWidget extends StatelessWidget {
                       ),
                     ),
                   ),
-                  onPressed: () => onSearch!(controller),
+                  onPressed: () => onSearch(searchController),
                   child: const Icon(Icons.search),
                 ),
               ),
@@ -406,124 +588,131 @@ class BaseDatabaseWidget extends StatelessWidget {
                     ),
                   ),
                 ),
-                onPressed: () => onAdd!(controller),
+                onPressed: () => onAdd!(rowList),
                 label: const Text("Adicionar"),
                 icon: const Icon(Icons.add),
               ),
             ),
           ),
       ],
-      child: FutureBuilder(
-        future: service.listar(filtro: filtro),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState != ConnectionState.done) {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
-          }
-
-          if (snapshot.hasError) {
-            var error = snapshot.error!;
-            var stackTrace = snapshot.stackTrace!;
-
-            WidgetsBinding.instance.addPostFrameCallback(
-              (_) {
-                if (error is ServiceException) {
-                  showDialog(
-                    context: context,
-                    builder: (context) => AlertOkDialog(
-                      title: const Text("Erro"),
-                      content: Text(error.toString()),
-                    ),
-                  );
-                } else {
-                  showDialog(
-                    context: context,
-                    builder: (context) => UnknownErrorDialog(
-                      exception: error,
-                      stacktrace: stackTrace,
-                    ),
-                  );
-                }
-              },
-            );
-
-            return Center(child: Text(error.toString()));
-          }
-
-          return PlutoGrid(
-            configuration: PlutoGridConfiguration(
-              columnSize: const PlutoGridColumnSizeConfig(
-                resizeMode: PlutoResizeMode.none,
-                autoSizeMode: PlutoAutoSizeMode.scale,
-              ),
-              style: Theme.of(context).brightness == Brightness.dark
-                  ? PlutoGridStyleConfig.dark(
-                      gridBorderRadius: borderRadius ?? BorderRadius.zero,
-                      enableColumnBorderVertical: true,
-                    )
-                  : PlutoGridStyleConfig(
-                      gridBorderRadius: borderRadius ?? BorderRadius.zero,
-                      enableColumnBorderVertical: true,
-                    ),
-            ),
-            columns: [
-              if (prefixColumnRenderer != null)
-                PlutoColumn(
-                  width: prefixColumnWidth ?? PlutoGridSettings.columnWidth,
-                  type: PlutoColumnType.select([]),
-                  titlePadding: EdgeInsets.zero,
-                  title: '',
-                  minWidth: 0,
-                  suppressedAutoSize: true,
-                  renderer: prefixColumnRenderer,
-                  readOnly: true,
-                  filterPadding: EdgeInsets.zero,
-                  field: '__prefix',
-                  enableSorting: false,
-                  enableDropToResize: false,
-                  enableContextMenu: false,
-                  cellPadding: EdgeInsets.zero,
-                  enableEditingMode: false,
-                ),
-              ...columns.entries.map((e) {
-                var current = e.value;
-
-                return PlutoColumn(
-                  width:
-                      Theme.of(context).textTheme.titleMedium!.fontSize! * 10,
-                  type: current['type'],
-                  title: current['title'],
-                  field: current['field'] ?? e.key,
-                  titleTextAlign: PlutoColumnTextAlign.center,
-                  textAlign: PlutoColumnTextAlign.center,
-                  readOnly: !(current['canEdit'] ?? false),
-                  enableEditingMode: current['canEdit'] ?? false,
-                  suppressedAutoSize: current['suppressedAutoSize'] ?? false,
-                  renderer: current['renderer'],
-                  enableDropToResize: false,
-                  enableContextMenu: false,
+      child: ListenableBuilder(
+        listenable: Listenable.merge([filtro]),
+        builder: (context, _) {
+          return FutureBuilder(
+            future: service.listar(filtro: filtro?.value),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState != ConnectionState.done) {
+                return const Center(
+                  child: CircularProgressIndicator(),
                 );
-              })
-            ],
-            rows: List.generate(
-              snapshot.data?.length ?? 0,
-              (index) {
-                columns;
-                var plutoRow = PlutoRow.fromJson({
-                  '__prefix': null,
-                  ...snapshot.data![index],
-                  ...Map.fromEntries(columns.entries
-                      .where(
-                        (element) => element.value['field'] != null,
-                      )
-                      .map(
-                        (e) => MapEntry(e.value['field'], null),
-                      )),
-                });
-                return plutoRow;
-              },
-            ),
+              }
+
+              if (snapshot.hasError) {
+                var error = snapshot.error!;
+                var stackTrace = snapshot.stackTrace!;
+
+                WidgetsBinding.instance.addPostFrameCallback(
+                  (_) {
+                    if (error is ServiceException) {
+                      showDialog(
+                        context: context,
+                        builder: (context) => AlertOkDialog(
+                          title: const Text("Erro"),
+                          content: Text(error.toString()),
+                        ),
+                      );
+                    } else {
+                      showDialog(
+                        context: context,
+                        builder: (context) => UnknownErrorDialog(
+                          exception: error,
+                          stacktrace: stackTrace,
+                        ),
+                      );
+                    }
+                  },
+                );
+
+                return Center(child: Text(error.toString()));
+              }
+
+              return PlutoGrid(
+                configuration: PlutoGridConfiguration(
+                  columnSize: const PlutoGridColumnSizeConfig(
+                    resizeMode: PlutoResizeMode.none,
+                    autoSizeMode: PlutoAutoSizeMode.scale,
+                  ),
+                  style: Theme.of(context).brightness == Brightness.dark
+                      ? PlutoGridStyleConfig.dark(
+                          gridBorderRadius: borderRadius ?? BorderRadius.zero,
+                          enableColumnBorderVertical: true,
+                        )
+                      : PlutoGridStyleConfig(
+                          gridBorderRadius: borderRadius ?? BorderRadius.zero,
+                          enableColumnBorderVertical: true,
+                        ),
+                ),
+                columns: [
+                  if (prefixColumnRenderer != null)
+                    PlutoColumn(
+                      width: prefixColumnWidth ?? PlutoGridSettings.columnWidth,
+                      type: PlutoColumnType.select([]),
+                      titlePadding: EdgeInsets.zero,
+                      title: '',
+                      minWidth: 0,
+                      suppressedAutoSize: true,
+                      renderer: prefixColumnRenderer,
+                      readOnly: true,
+                      filterPadding: EdgeInsets.zero,
+                      field: '__prefix',
+                      enableSorting: false,
+                      enableDropToResize: false,
+                      enableContextMenu: false,
+                      cellPadding: EdgeInsets.zero,
+                      enableEditingMode: false,
+                    ),
+                  ...columns.entries.map((e) {
+                    var current = e.value;
+
+                    return PlutoColumn(
+                      width:
+                          Theme.of(context).textTheme.titleMedium!.fontSize! *
+                              10,
+                      type: current['type'],
+                      title: current['title'],
+                      field: current['field'] ?? e.key,
+                      titleTextAlign: PlutoColumnTextAlign.center,
+                      textAlign: PlutoColumnTextAlign.center,
+                      readOnly: !(current['canEdit'] ?? false),
+                      enableEditingMode: current['canEdit'] ?? false,
+                      suppressedAutoSize:
+                          current['suppressedAutoSize'] ?? false,
+                      renderer: current['renderer'],
+                      enableDropToResize: false,
+                      enableContextMenu: false,
+                    );
+                  })
+                ],
+                rows: rowList = List.generate(
+                  snapshot.data?.length ?? 0,
+                  (index) {
+                    columns;
+                    var plutoRow = PlutoRow.fromJson({
+                      '__prefix': null,
+                      ...snapshot.data![index],
+                      ...Map.fromEntries(columns.entries
+                          .where(
+                            (element) => element.value['field'] != null,
+                          )
+                          .map(
+                            (e) => MapEntry(e.value['field'], null),
+                          )),
+                    });
+                    return plutoRow;
+                  },
+                ),
+              );
+            },
           );
         },
       ),
@@ -960,5 +1149,84 @@ class _BaseAddEditDialogState extends State<BaseAddEditDialog> {
         ),
       ),
     );
+  }
+}
+
+class DateFormField extends StatelessWidget {
+  const DateFormField({
+    super.key,
+    required this.dataController,
+    this.validator,
+    this.decoration,
+    this.label,
+  });
+
+  final ValueNotifier<DateTime?> dataController;
+
+  final String? Function(DateTime? value)? validator;
+
+  final InputDecoration? decoration;
+
+  final Widget? label;
+
+  @override
+  Widget build(BuildContext context) {
+    var formField = FormField<DateTime>(
+      validator: validator ??
+          (value) {
+            if (value == null) {
+              return "Campo não pode ser vazio";
+            }
+            return null;
+          },
+      builder: (state) {
+        WidgetsBinding.instance.addPostFrameCallback(
+          (_) => dataController.value = state.value,
+        );
+        var inputDecoration = decoration ?? InputDecoration();
+        return InputDecorator(
+          decoration: inputDecoration.copyWith(
+            border: OutlineInputBorder(),
+            errorText: state.errorText,
+            errorMaxLines: 2,
+            suffixIcon: IconButton(
+              onPressed: () => showDatePicker(
+                locale: const Locale('pt'),
+                context: context,
+                firstDate: DateTime.now(),
+                lastDate: DateTime.now().add(
+                  Duration(days: 1000),
+                ),
+                initialDate: state.value,
+              ).then(
+                (value) {
+                  if (value == null) return;
+                  state.didChange(value);
+                },
+              ),
+              icon: Icon(Icons.calendar_today),
+            ),
+          ),
+          child: Text(
+            state.value != null
+                ? DateFormat("dd/MM/yyyy").format(
+                    state.value!,
+                  )
+                : "dd/MM/yyyy",
+          ),
+        );
+      },
+    );
+
+    if (label != null) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          label!,
+          formField,
+        ],
+      );
+    }
+    return formField;
   }
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'pages/login.dart';
@@ -11,6 +12,16 @@ void main() {
     MaterialApp(
       title: 'Flutter Demo',
       debugShowCheckedModeBanner: false,
+
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [
+        Locale('pt', ''),
+      ],
+
       theme: ThemeData(
         textTheme: GoogleFonts.getTextTheme('Rubik'),
         colorScheme: const ColorScheme(
@@ -126,7 +137,6 @@ void main() {
             );
           }
         }
-
 
         return MaterialPageRoute(
           builder: (context) => const LoginScreen(),

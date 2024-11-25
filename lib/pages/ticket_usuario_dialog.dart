@@ -85,7 +85,7 @@ class _AddTicketState extends State<AddTicket> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    "Adicionar Equipamentos",
+                    "Reserva de Equipamentos",
                     style: Theme.of(context).textTheme.headlineLarge,
                   ),
                   Divider(color: Colors.transparent),
@@ -139,6 +139,13 @@ class _AddTicketState extends State<AddTicket> {
                           ),
                         ),
                       ],
+                    ),
+                  ),
+                  Divider(color: Colors.transparent),
+                  Text(
+                    "* Campos obrigatórios",
+                    style: TextStyle(
+                      color: getColorScheme(context).error,
                     ),
                   ),
                   Divider(color: Colors.transparent),
@@ -244,20 +251,20 @@ class _AddTicketState extends State<AddTicket> {
                   ),
                 ),
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        "Categoria",
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      FormField<int>(
-                        initialValue: listaCategorias.first['id'] as int,
-                        builder: (state) {
-                          WidgetsBinding.instance.addPostFrameCallback(
-                            (_) => categoriaController.value = state.value,
-                          );
-                          return DropdownMenu<int>(
+                  child: FormField<int>(
+                    initialValue: listaCategorias.first['id'] as int,
+                    builder: (state) {
+                      WidgetsBinding.instance.addPostFrameCallback(
+                        (_) => categoriaController.value = state.value,
+                      );
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "Categoria",
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          DropdownMenu<int>(
                             initialSelection:
                                 listaCategorias.first['id'] as int,
                             expandedInsets:
@@ -272,48 +279,50 @@ class _AddTicketState extends State<AddTicket> {
                                     )
                                     .toList() ??
                                 [],
-                          );
-                        },
-                      ),
-                    ],
+                          ),
+                        ],
+                      );
+                    },
                   ),
                 ),
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        "Equipamento",
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      ListenableBuilder(
-                        listenable: categoriaController,
-                        builder: (context, _) {
-                          equipamentoController.value = null;
-                          var _fieldController = TextEditingController();
+                  child: ListenableBuilder(
+                    listenable: categoriaController,
+                    builder: (context, _) {
+                      equipamentoController.value = null;
+                      var _fieldController = TextEditingController();
 
-                          return FutureBuilder(
-                            future: categoriaController.value == null
-                                ? Future.value([])
-                                : EquipamentoService().listar(
-                                    filtro: {
-                                      'categoriaId': categoriaController.value,
-                                    },
-                                  ),
-                            builder: (context, snapshot) {
-                              return FormField<int?>(
-                                validator: (value) {
-                                  if (value == null) {
-                                    return "Campo não pode ser vazio";
-                                  }
-                                  return null;
+                      return FutureBuilder(
+                        future: categoriaController.value == null
+                            ? Future.value([])
+                            : EquipamentoService().listar(
+                                filtro: {
+                                  'categoriaId': categoriaController.value,
                                 },
-                                builder: (state) {
-                                  WidgetsBinding.instance.addPostFrameCallback(
-                                    (_) => equipamentoController.value =
-                                        state.value,
-                                  );
-                                  return DropdownMenu<int>(
+                              ),
+                        builder: (context, snapshot) {
+                          return FormField<int?>(
+                            validator: (value) {
+                              if (value == null) {
+                                return "Campo não pode ser vazio";
+                              }
+                              return null;
+                            },
+                            builder: (state) {
+                              WidgetsBinding.instance.addPostFrameCallback(
+                                (_) =>
+                                    equipamentoController.value = state.value,
+                              );
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    "Equipamento *",
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  DropdownMenu<int>(
                                     controller: _fieldController,
                                     enabled: snapshot.data != null,
                                     inputDecorationTheme: InputDecorationTheme(
@@ -344,68 +353,26 @@ class _AddTicketState extends State<AddTicket> {
                                     onSelected: (value) {
                                       state.didChange(value);
                                     },
-                                  );
-                                },
+                                  ),
+                                ],
                               );
                             },
                           );
                         },
-                      ),
-                    ],
+                      );
+                    },
                   ),
                 ),
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        "Data de Reserva",
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      FormField<DateTime>(
-                        validator: (value) {
-                          if (value == null) {
-                            return "Campo não pode ser vazio";
-                          }
-                          return null;
-                        },
-                        builder: (state) {
-                          WidgetsBinding.instance.addPostFrameCallback(
-                            (_) => dataController.value = state.value,
-                          );
-                          return InputDecorator(
-                            decoration: InputDecoration(
-                              border: OutlineInputBorder(),
-                              errorStyle: TextStyle(fontSize: 0),
-                              errorText: state.errorText,
-                              suffixIcon: IconButton(
-                                onPressed: () => showDatePicker(
-                                  context: context,
-                                  firstDate: DateTime.now(),
-                                  lastDate: DateTime.now().add(
-                                    Duration(days: 1000),
-                                  ),
-                                  initialDate: state.value,
-                                ).then(
-                                  (value) {
-                                    if (value == null) return;
-                                    state.didChange(value);
-                                  },
-                                ),
-                                icon: Icon(Icons.calendar_today),
-                              ),
-                            ),
-                            child: Text(
-                              state.value != null
-                                  ? DateFormat("dd/MM/yyyy").format(
-                                      state.value!,
-                                    )
-                                  : "dd/MM/yyyy",
-                            ),
-                          );
-                        },
-                      ),
-                    ],
+                  child: DateFormField(
+                    label: Text(
+                      "Data de Reserva *",
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    decoration: InputDecoration(
+                      errorStyle: TextStyle(fontSize: 0),
+                    ),
+                    dataController: dataController,
                   ),
                 ),
               ],

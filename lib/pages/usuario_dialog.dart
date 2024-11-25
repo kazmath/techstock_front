@@ -1,6 +1,7 @@
 // ignore_for_file: prefer_const_literals_to_create_immutables, prefer_const_constructors
 
 import 'package:flutter/material.dart';
+import 'package:techstock_front/tools/exceptions.dart';
 
 import '../pages/widgets.dart';
 import '../service/setor_service.dart';
@@ -75,89 +76,220 @@ class AddEditUsuario extends StatelessWidget {
         {
           'children': [
             {
-              'label': Text("Setor"),
+              'label': Text("Curso"),
               'field_name': 'setorId',
               if (editMap != null) 'defaultText': editMap!['setorId'],
               'converter': (String value) => int.tryParse(value),
               'fieldBuilder': (TextEditingController controller) {
-                return FutureBuilder(
-                  future: SetorService().listar(),
-                  builder: (context, snapshot) {
-                    if (!snapshot.hasData) {
-                      return InputDecorator(
-                        decoration: InputDecoration(),
-                        child: LinearProgressIndicator(),
-                      );
-                    }
-
-                    var initialValue = int.tryParse(controller.text);
-                    return FormField<int>(
-                      initialValue: initialValue,
-                      validator: (value) {
-                        if (value == null) {
-                          return "Campo não pode ser vazio";
+                return StatefulBuilder(
+                  builder: (context, setState) {
+                    return FutureBuilder(
+                      future: SetorService().listar(),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState != ConnectionState.done) {
+                          return InputDecorator(
+                            decoration: InputDecoration(),
+                            child: LinearProgressIndicator(),
+                          );
                         }
-                        return null;
-                      },
-                      builder: (state) {
-                        return InputDecorator(
-                          decoration: InputDecoration(
-                            errorText: state.errorText,
-                            border: InputBorder.none,
-                          ),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: DropdownMenu<int>(
-                                  initialSelection: initialValue,
-                                  errorText: state.errorText,
-                                  inputDecorationTheme: InputDecorationTheme(
-                                    border: OutlineInputBorder(),
-                                    errorStyle: TextStyle(fontSize: 0),
-                                  ),
-                                  expandedInsets: EdgeInsets.only(
-                                    right: 4.0,
-                                  ),
-                                  onSelected: (value) {
-                                    controller.text = value.toString();
-                                    state.didChange(value);
-                                  },
-                                  dropdownMenuEntries: snapshot.data!.map(
-                                    (e) {
-                                      return DropdownMenuEntry(
-                                        value: e['id'] as int,
-                                        label: e['nome'],
-                                      );
-                                    },
-                                  ).toList(),
-                                ),
+
+                        var initialValue = int.tryParse(controller.text);
+                        return FormField<int>(
+                          initialValue: initialValue,
+                          validator: (value) {
+                            if (value == null) {
+                              return "Campo não pode ser vazio";
+                            }
+                            return null;
+                          },
+                          builder: (state) {
+                            return InputDecorator(
+                              decoration: InputDecoration(
+                                errorText: state.errorText,
+                                border: InputBorder.none,
                               ),
-                              IconButton.filled(
-                                style: ButtonStyle(
-                                  backgroundColor: WidgetStatePropertyAll(
-                                    Colors.green,
-                                  ),
-                                  foregroundColor: WidgetStatePropertyAll(
-                                    getContrastColor(Colors.green),
-                                  ),
-                                  iconColor: WidgetStatePropertyAll(
-                                    getContrastColor(Colors.green),
-                                  ),
-                                  shape: WidgetStatePropertyAll(
-                                    RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(
-                                        8.0,
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: DropdownMenu<int>(
+                                      initialSelection: initialValue,
+                                      errorText: state.errorText,
+                                      inputDecorationTheme:
+                                          InputDecorationTheme(
+                                        border: OutlineInputBorder(),
+                                        errorStyle: TextStyle(fontSize: 0),
                                       ),
+                                      expandedInsets: EdgeInsets.only(
+                                        right: 4.0,
+                                      ),
+                                      onSelected: (value) {
+                                        controller.text = value.toString();
+                                        state.didChange(value);
+                                      },
+                                      dropdownMenuEntries: snapshot.data!.map(
+                                        (e) {
+                                          return DropdownMenuEntry(
+                                            value: e['id'] as int,
+                                            label: e['nome'],
+                                            labelWidget: Row(
+                                              children: [
+                                                Expanded(
+                                                  child: Text(e['nome']),
+                                                ),
+                                                IconButton.filled(
+                                                  style: ButtonStyle(
+                                                    backgroundColor:
+                                                        WidgetStatePropertyAll(
+                                                      getColorScheme(context)
+                                                          .errorContainer,
+                                                    ),
+                                                    foregroundColor:
+                                                        WidgetStatePropertyAll(
+                                                      getColorScheme(context)
+                                                          .onErrorContainer,
+                                                    ),
+                                                    iconColor:
+                                                        WidgetStatePropertyAll(
+                                                      getColorScheme(context)
+                                                          .onErrorContainer,
+                                                    ),
+                                                    shape:
+                                                        WidgetStatePropertyAll(
+                                                      RoundedRectangleBorder(
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .circular(
+                                                          8.0,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  onPressed: () async {
+                                                    var setorController =
+                                                        TextEditingController();
+                                                    var result =
+                                                        await showDialog<bool>(
+                                                      context: context,
+                                                      builder: (context) =>
+                                                          AlertOkCancelDialog(
+                                                        title: Text(
+                                                            "Excluir Curso"),
+                                                        yesString: "Sim",
+                                                        noString: "Não",
+                                                        content: Text(
+                                                          "Tem certeza que deseja "
+                                                          "remover o curso \"${e['nome']}\"",
+                                                        ),
+                                                      ),
+                                                    );
+
+                                                    if (!(result ?? false)) {
+                                                      return;
+                                                    }
+
+                                                    try {
+                                                      await SetorService()
+                                                          .deletar(e['id']);
+                                                    } on ServiceException catch (e) {
+                                                      showDialog(
+                                                        context: context,
+                                                        builder: (context) =>
+                                                            AlertOkDialog(
+                                                          title: Text("Erro"),
+                                                          content:
+                                                              Text(e.cause),
+                                                        ),
+                                                      );
+                                                    }
+
+                                                    setState(() {});
+                                                  },
+                                                  icon: Icon(Icons.remove),
+                                                ),
+                                              ],
+                                            ),
+                                          );
+                                        },
+                                      ).toList(),
                                     ),
                                   ),
-                                ),
-                                onPressed: () {},
-                                icon: Icon(
-                                  Icons.add,
-                                ),
+                                  IconButton.filled(
+                                    style: ButtonStyle(
+                                      backgroundColor: WidgetStatePropertyAll(
+                                        Colors.green,
+                                      ),
+                                      foregroundColor: WidgetStatePropertyAll(
+                                        getContrastColor(Colors.green),
+                                      ),
+                                      iconColor: WidgetStatePropertyAll(
+                                        getContrastColor(Colors.green),
+                                      ),
+                                      shape: WidgetStatePropertyAll(
+                                        RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            8.0,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    onPressed: () async {
+                                      var setorController =
+                                          TextEditingController();
+                                      var result = await showDialog<bool>(
+                                        context: context,
+                                        builder: (context) =>
+                                            AlertOkCancelDialog(
+                                          title: Text("Adicionar Curso"),
+                                          yesString: "Confirmar",
+                                          content: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                "Nome do Curso a adicionar:",
+                                                style: Theme.of(context)
+                                                    .textTheme
+                                                    .titleSmall,
+                                              ),
+                                              TextFormField(
+                                                controller: setorController,
+                                                validator: stringValidator,
+                                                decoration: InputDecoration(
+                                                  border: OutlineInputBorder(),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      );
+
+                                      if (!(result ?? false)) return;
+
+                                      try {
+                                        await SetorService().add({
+                                          'nome': setorController.text,
+                                        });
+                                      } on ServiceException catch (e) {
+                                        showDialog(
+                                          context: context,
+                                          builder: (context) => AlertOkDialog(
+                                            title: Text("Erro"),
+                                            content: Text(e.cause),
+                                          ),
+                                        );
+                                      }
+
+                                      setState(() {});
+                                    },
+                                    icon: Icon(
+                                      Icons.add,
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ],
-                          ),
+                            );
+                          },
                         );
                       },
                     );
@@ -227,7 +359,7 @@ class AddEditUsuario extends StatelessWidget {
                           ),
                           DropdownMenuEntry(
                             value: 'USER',
-                            label: "Usuário",
+                            label: "Professor",
                           ),
                         ],
                       ),

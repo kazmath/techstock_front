@@ -23,7 +23,7 @@ class _UsuariosState extends State<Usuarios> {
 
   Object? error;
 
-  Map<String, dynamic> filtro = {};
+  var filtro = KeyValueNotifier<String, dynamic>({});
 
   @override
   void initState() {
@@ -57,7 +57,7 @@ class _UsuariosState extends State<Usuarios> {
         : BaseDatabaseWidget(
             title: "Usuário",
             service: UsuarioService(),
-            filterFields: [],
+            filtro: filtro,
             onAdd: (controller) async {
               var result = await showDialog<Map<String, dynamic>>(
                 context: context,
@@ -65,15 +65,7 @@ class _UsuariosState extends State<Usuarios> {
               );
               if (result != null) setState(() {});
             },
-            filtro: filtro,
-            onSearch: (controller) {
-              if (controller.text == "") {
-                filtro.remove('query');
-              } else {
-                filtro['query'] = controller.text;
-              }
-              setState(() {});
-            },
+            doSearch: true,
             prefixColumnRenderer: (PlutoColumnRendererContext rendererContext) {
               return IconButton(
                 onPressed: () async {
@@ -107,7 +99,7 @@ class _UsuariosState extends State<Usuarios> {
                 'type': PlutoColumnType.text(),
               },
               'setorId': {
-                'title': "Setor",
+                'title': "Curso",
                 'type': PlutoColumnType.text(),
                 'renderer': (rendererContext) {
                   return Center(
