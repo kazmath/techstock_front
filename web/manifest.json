@@ -1,6 +1,6 @@
 {
-    "name": "techstock_front",
-    "short_name": "techstock_front",
+    "name": "Techstock",
+    "short_name": "Techstock",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

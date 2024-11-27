@@ -1,0 +1,30 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Update flutter_launcher_icons",
+			"type": "shell",
+			"command": "dart run flutter_launcher_icons",
+			"problemMatcher": []
+		},
+		{
+			"label": "Update launcher_name",
+			"type": "shell",
+			"command": "dart run launcher_name:main",
+			"problemMatcher": []
+		},
+		{
+			"label": "Rename app",
+			"type": "shell",
+			"command": "dart run rename_app:main all='${input:app_name}'",
+			"problemMatcher": []
+		},
+	],
+	"inputs": [
+		{
+			"id": "app_name",
+			"type": "promptString",
+			"description": "Nome do app para mudar",
+		}
+	]
+}
