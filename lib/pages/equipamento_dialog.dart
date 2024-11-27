@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:techstock_front/service/categoria_service.dart';
 import 'package:techstock_front/service/equipamento_service.dart';
+import 'package:techstock_front/theme.dart';
 import 'package:techstock_front/tools/exceptions.dart';
 
 import '../pages/widgets.dart';
@@ -260,13 +261,20 @@ class AddEditEquipamento extends StatelessWidget {
                                   IconButton.filled(
                                     style: ButtonStyle(
                                       backgroundColor: WidgetStatePropertyAll(
-                                        Colors.green,
+                                        CustomMaterialTheme
+                                            .salvarAprovado.value,
                                       ),
                                       foregroundColor: WidgetStatePropertyAll(
-                                        getContrastColor(Colors.green),
+                                        getContrastColor(
+                                          CustomMaterialTheme.salvarAprovado
+                                              .light.onColorContainer,
+                                        ),
                                       ),
                                       iconColor: WidgetStatePropertyAll(
-                                        getContrastColor(Colors.green),
+                                        getContrastColor(
+                                          CustomMaterialTheme.salvarAprovado
+                                              .light.onColorContainer,
+                                        ),
                                       ),
                                       shape: WidgetStatePropertyAll(
                                         RoundedRectangleBorder(

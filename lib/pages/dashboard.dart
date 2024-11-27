@@ -29,12 +29,15 @@ class Dashboard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 DefaultTextStyle(
-                  style: TextStyle(color: Colors.white),
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onPrimary,
+                  ),
                   child: Theme(
                     data: Theme.of(context).copyWith(
-                        iconTheme: IconThemeData.fallback().copyWith(
-                      color: Colors.white,
-                    )),
+                      iconTheme: IconThemeData.fallback().copyWith(
+                        color: Theme.of(context).colorScheme.onPrimary,
+                      ),
+                    ),
                     child: Row(
                       children: [
                         {

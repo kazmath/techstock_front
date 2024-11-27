@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 import 'package:techstock_front/service/categoria_service.dart';
 import 'package:techstock_front/service/equipamento_service.dart';
 import 'package:techstock_front/service/ticket_service.dart';
+import 'package:techstock_front/theme.dart';
 import 'package:techstock_front/tools/utils.dart';
 
 import '../pages/widgets.dart';
@@ -33,7 +34,7 @@ class _AddTicketState extends State<AddTicket> {
 
   final scaffoldKey = GlobalKey<ScaffoldState>();
 
-  Map<String, dynamic>? get result {
+  Map<String, dynamic>? evaluateResults() {
     if (formKey.currentState?.validate() != true) return null;
     var temp = equipamentoFieldGroups.values.map(
       (e) {
@@ -50,15 +51,17 @@ class _AddTicketState extends State<AddTicket> {
       ),
     ).then(
       (value) {
-        Navigator.pop(context, value);
         WidgetsBinding.instance.addPostFrameCallback(
-          (_) => showDialog(
-            context: context,
-            builder: (context) => AlertOkDialog(
-              title: Text("Sucesso"),
-              content: Text("Reservas feitas com sucesso"),
-            ),
-          ),
+          (_) {
+            Navigator.pop(context, value);
+            showDialog(
+              context: context,
+              builder: (context) => AlertOkDialog(
+                title: Text("Sucesso"),
+                content: Text("Reservas feitas com sucesso"),
+              ),
+            );
+          },
         );
       },
     );
@@ -158,9 +161,11 @@ class _AddTicketState extends State<AddTicket> {
                         child: FilledButton(
                           onPressed: () => Navigator.pop(context),
                           style: ButtonStyle(
-                            backgroundColor: WidgetStatePropertyAll(Colors.red),
+                            backgroundColor: WidgetStatePropertyAll(
+                              getColorScheme(context).errorContainer,
+                            ),
                             foregroundColor: WidgetStatePropertyAll(
-                              getContrastColor(Colors.red),
+                              getColorScheme(context).onErrorContainer,
                             ),
                             padding: WidgetStatePropertyAll(
                               EdgeInsets.all(15.0),
@@ -177,14 +182,14 @@ class _AddTicketState extends State<AddTicket> {
                       VerticalDivider(),
                       Expanded(
                         child: FilledButton(
-                          onPressed: () {
-                            result;
-                          },
+                          onPressed: evaluateResults,
                           style: ButtonStyle(
-                            backgroundColor:
-                                WidgetStatePropertyAll(Colors.green),
+                            backgroundColor: WidgetStatePropertyAll(
+                              CustomMaterialTheme.salvarAprovado.value,
+                            ),
                             foregroundColor: WidgetStatePropertyAll(
-                              getContrastColor(Colors.green),
+                              CustomMaterialTheme
+                                  .salvarAprovado.light.onColorContainer,
                             ),
                             padding: WidgetStatePropertyAll(
                               EdgeInsets.all(15.0),

@@ -145,7 +145,7 @@ class _TicketsUsuarioState extends State<TicketsUsuario> {
               //   return;
               // }
 
-              var result = await showDialog<List<int>>(
+              var result = await showDialog<List<int?>>(
                 context: context,
                 builder: (context) => const AddTicket(),
               );

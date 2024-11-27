@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:pluto_grid/pluto_grid.dart';
+import 'package:techstock_front/theme.dart';
 
 import '../service/service.dart';
 import '../service/ticket_service.dart';
@@ -1134,11 +1135,12 @@ class _BaseAddEditDialogState extends State<BaseAddEditDialog> {
                               borderRadius: BorderRadius.circular(8.0),
                             ),
                           ),
-                          backgroundColor: const WidgetStatePropertyAll(
-                            Colors.green,
+                          backgroundColor: WidgetStatePropertyAll(
+                            CustomMaterialTheme.salvarAprovado.value,
                           ),
                           foregroundColor: WidgetStatePropertyAll(
-                            getContrastColor(Colors.green),
+                            CustomMaterialTheme
+                                .salvarAprovado.light.onColorContainer,
                           ),
                         ),
                         child: widget.confirmButtonLabel ??
