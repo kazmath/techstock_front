@@ -7,12 +7,12 @@
 			"command": "dart run flutter_launcher_icons",
 			"problemMatcher": []
 		},
-		{
-			"label": "Update launcher_name",
-			"type": "shell",
-			"command": "dart run launcher_name:main",
-			"problemMatcher": []
-		},
+		// {
+		// 	"label": "Update launcher_name",
+		// 	"type": "shell",
+		// 	"command": "dart run launcher_name:main",
+		// 	"problemMatcher": []
+		// },
 		{
 			"label": "Rename app",
 			"type": "shell",
