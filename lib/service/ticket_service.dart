@@ -5,7 +5,7 @@ import 'service.dart';
 
 class TicketService extends IService {
   @override
-  Future<int> add(Map<String, dynamic> map) async {
+  Future<int?> add(Map<String, dynamic> map) async {
     var response = await apiRequest(
       "${Constants.apiURL}/ticket",
       body: map,
@@ -23,17 +23,17 @@ class TicketService extends IService {
 
     var items = responseBody;
 
-    return items!;
+    return items;
   }
 
   @override
-  Future<bool> deletar(int id) {
+  Future<bool?> deletar(int id) {
     // TODO: implement deletar
     throw UnimplementedError();
   }
 
   @override
-  Future<int> editar(int id, Map<String, dynamic> data) {
+  Future<int?> editar(int id, Map<String, dynamic> data) {
     // TODO: implement editar
     throw UnimplementedError();
   }
@@ -60,7 +60,7 @@ class TicketService extends IService {
   }
 
   @override
-  Future<Map<String, dynamic>> get(int id) async {
+  Future<Map<String, dynamic>?> get(int id) async {
     var response = await apiRequest(
       "${Constants.apiURL}/ticket/$id",
       method: 'get',
@@ -82,7 +82,7 @@ class TicketService extends IService {
   }
 
   @override
-  Future<List<Map<String, dynamic>>> listar({
+  Future<List<Map<String, dynamic>>?> listar({
     Map<String, dynamic>? filtro,
   }) async {
     var response = await apiRequest(
@@ -91,7 +91,7 @@ class TicketService extends IService {
       body: filtro,
     );
 
-    List<Map<String, dynamic>> responseBody;
+    List<Map<String, dynamic>>? responseBody;
     List<String> responseErrors;
 
     (responseBody, responseErrors) =
@@ -106,7 +106,7 @@ class TicketService extends IService {
     return items;
   }
 
-  Future<List<Map<String, dynamic>>> listarStatuses() async {
+  Future<List<Map<String, dynamic>>?> listarStatuses() async {
     var response = await apiRequest(
       "${Constants.apiURL}/ticket/statuses",
       method: 'get',

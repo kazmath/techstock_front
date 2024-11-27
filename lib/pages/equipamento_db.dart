@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:pluto_grid/pluto_grid.dart';
+import 'package:techstock_front/pages/widgets.dart';
 
 import '../service/categoria_service.dart';
 import '../service/equipamento_service.dart';
@@ -7,7 +8,6 @@ import '../tools/constants.dart';
 import '../tools/exceptions.dart';
 import '../tools/utils.dart';
 import 'equipamento_dialog.dart';
-import 'widgets.dart';
 
 class Equipamentos extends StatefulWidget {
   const Equipamentos({super.key, this.initialFilter});
@@ -26,13 +26,23 @@ class _EquipamentosState extends State<Equipamentos> {
 
   List<Object?> errors = List.empty(growable: true);
 
-  var filtro = KeyValueNotifier<String, dynamic>({});
-  var statusController = ValueNotifier<String?>(null);
-  var categoriaIdController = ValueNotifier<int?>(null);
+  late final KeyValueNotifier<String, dynamic> filtro;
+  final statusController = ValueNotifier<String?>(null);
+  final categoriaIdController = ValueNotifier<int?>(null);
 
   @override
   void initState() {
     super.initState();
+    filtro = KeyValueNotifier<String, dynamic>(
+      widget.initialFilter ?? {},
+    );
+    // WidgetsBinding.instance.addPostFrameCallback((_) {
+    //   final args = ModalRoute.of(context)!.settings.arguments
+    //       as Arguments<Map<String, dynamic>>?;
+    //   if (args?.value != null) {
+    //     filtro.value = args!.value;
+    //   }
+    // });
     Future.wait(
       [
         CategoriaService().listar().then(
@@ -91,28 +101,18 @@ class _EquipamentosState extends State<Equipamentos> {
                 'label': "Status",
                 'controller': statusController,
                 'value_converter': (value) {
-                  return value?.value;
+                  return statusController.value = value;
                 },
-                'widget': FormField(
-                  builder: (state) {
-                    listaStatuses;
-                    return DropdownMenu(
-                      onSelected: (value) {},
-                      expandedInsets: EdgeInsets.zero,
-                      dropdownMenuEntries: [
-                        const DropdownMenuEntry(
-                          value: null,
-                          label: "",
+                'widget': DropdownFormField(
+                  list: listaStatuses
+                      ?.map(
+                        (e) => DropdownMenuEntry<String?>(
+                          value: e['codigo'],
+                          label: e['descricao'],
                         ),
-                        ...?listaStatuses?.map(
-                          (e) => DropdownMenuEntry<String?>(
-                            value: e['codigo'],
-                            label: e['descricao'],
-                          ),
-                        ),
-                      ],
-                    );
-                  },
+                      )
+                      .toList(),
+                  controller: statusController,
                 ),
               },
               // {
@@ -141,28 +141,18 @@ class _EquipamentosState extends State<Equipamentos> {
                 'label': "Categoria",
                 'controller': categoriaIdController,
                 'value_converter': (value) {
-                  return value?.value;
+                  return categoriaIdController.value = value;
                 },
-                'widget': FormField(
-                  builder: (state) {
-                    listaCategorias;
-                    return DropdownMenu(
-                      expandedInsets: EdgeInsets.zero,
-                      enableFilter: true,
-                      dropdownMenuEntries: [
-                        const DropdownMenuEntry(
-                          value: null,
-                          label: "",
+                'widget': DropdownFormField(
+                  list: listaCategorias
+                      ?.map(
+                        (e) => DropdownMenuEntry<int>(
+                          value: e['id'],
+                          label: e['nome'],
                         ),
-                        ...?listaCategorias?.map(
-                          (e) => DropdownMenuEntry<int>(
-                            value: e['id'],
-                            label: e['nome'],
-                          ),
-                        ),
-                      ],
-                    );
-                  },
+                      )
+                      .toList(),
+                  controller: categoriaIdController,
                 ),
               },
             ],

@@ -24,10 +24,7 @@ class AddEditUsuario extends StatelessWidget {
 
               Map<String, dynamic>? resultAPI = await apiRequestDialog(
                 context,
-                Future(() async {
-                  UsuarioService().deletar(id);
-                  return result;
-                }),
+                UsuarioService().deletar(id).then((_) => result),
               );
 
               if (resultAPI == null) return;
@@ -37,21 +34,17 @@ class AddEditUsuario extends StatelessWidget {
           : null,
       confirmButtonCallback: (result) async {
         if (result == null) return;
-        int id = editMap!['id'];
 
         Map<String, dynamic>? resultAPI = await apiRequestDialog(
           context,
-          Future(() async {
-            if (editMap != null) {
-              await UsuarioService().editar(
-                id,
-                result,
-              );
-            } else {
-              await UsuarioService().add(result);
-            }
-            return result;
-          }),
+          editMap != null
+              ? UsuarioService()
+                  .editar(
+                    editMap!['id'],
+                    result,
+                  )
+                  .then((_) => result)
+              : UsuarioService().add(result).then((_) => result),
         );
 
         if (resultAPI == null) return;
@@ -316,6 +309,7 @@ class AddEditUsuario extends StatelessWidget {
               'label': Text("Senha"),
               'field_name': 'senha',
               'defaultText': "",
+              'validator': (String? value) => null,
               'obscure': true,
             },
             {

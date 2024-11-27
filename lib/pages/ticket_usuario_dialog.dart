@@ -31,6 +31,8 @@ class _AddTicketState extends State<AddTicket> {
 
   final formKey = GlobalKey<FormState>();
 
+  final scaffoldKey = GlobalKey<ScaffoldState>();
+
   Map<String, dynamic>? get result {
     if (formKey.currentState?.validate() != true) return null;
     var temp = equipamentoFieldGroups.values.map(
@@ -65,6 +67,7 @@ class _AddTicketState extends State<AddTicket> {
   @override
   Widget build(BuildContext context) {
     return BaseApp(
+      scaffoldKey: scaffoldKey,
       child: Center(
         child: Container(
           padding: const EdgeInsets.all(30.0),

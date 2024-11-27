@@ -5,7 +5,7 @@ import 'service.dart';
 
 class EquipamentoService extends IService {
   @override
-  Future<int> add(Map<String, dynamic> map) async {
+  Future<int?> add(Map<String, dynamic> map) async {
     var response = await apiRequest(
       "${Constants.apiURL}/equipamento",
       body: map,
@@ -23,11 +23,11 @@ class EquipamentoService extends IService {
 
     var items = responseBody;
 
-    return items!;
+    return items;
   }
 
   @override
-  Future<bool> deletar(int id) async {
+  Future<bool?> deletar(int id) async {
     var response = await apiRequest(
       "${Constants.apiURL}/equipamento/$id",
       method: 'delete',
@@ -48,7 +48,7 @@ class EquipamentoService extends IService {
   }
 
   @override
-  Future<int> editar(int id, Map<String, dynamic> data) async {
+  Future<int?> editar(int id, Map<String, dynamic> data) async {
     var response = await apiRequest(
       "${Constants.apiURL}/equipamento/$id",
       method: 'put',
@@ -91,7 +91,7 @@ class EquipamentoService extends IService {
   }
 
   @override
-  Future<Map<String, dynamic>> get(int id) async {
+  Future<Map<String, dynamic>?> get(int id) async {
     var response = await apiRequest(
       "${Constants.apiURL}/equipamento/$id",
       method: 'get',
@@ -113,7 +113,7 @@ class EquipamentoService extends IService {
   }
 
   @override
-  Future<List<Map<String, dynamic>>> listar({
+  Future<List<Map<String, dynamic>>?> listar({
     Map<String, dynamic>? filtro,
   }) async {
     var response = await apiRequest(
@@ -137,7 +137,7 @@ class EquipamentoService extends IService {
     return items;
   }
 
-  Future<List<Map<String, dynamic>>> listarStatuses() async {
+  Future<List<Map<String, dynamic>>?> listarStatuses() async {
     var response = await apiRequest(
       "${Constants.apiURL}/equipamento/statuses",
       method: 'get',

@@ -36,42 +36,54 @@ class Constants {
         {
           'title': "Dashboard",
           'route': Dashboard.routeName,
-          'widget': const Dashboard(),
+          'builder': ([_]) {
+            return const Dashboard();
+          },
           'icon': Icons.home_outlined,
           'role': 'ROLE_ADMIN',
         },
         {
           'title': "Usuarios",
           'route': Usuarios.routeName,
-          'widget': const Usuarios(),
+          'builder': ([Map<String, dynamic>? filtro]) {
+            return Usuarios(initialFilter: filtro);
+          },
           'icon': Icons.person_outlined,
           'role': 'ROLE_ADMIN',
         },
         {
           'title': "Reservas", // Usuário
           'route': TicketsUsuario.routeName,
-          'widget': const TicketsUsuario(),
+          'builder': ([Map<String, dynamic>? filtro]) {
+            return TicketsUsuario(initialFilter: filtro);
+          },
           'icon': Icons.confirmation_num_outlined,
           'role': 'ROLE_USER',
         },
         {
           'title': "Reservas", // Usuário
           'route': TicketsAdmin.routeName,
-          'widget': const TicketsAdmin(),
+          'builder': ([Map<String, dynamic>? filtro]) {
+            return TicketsAdmin(initialFilter: filtro);
+          },
           'icon': Icons.confirmation_num_outlined,
           'role': 'ROLE_ADMIN',
         },
         {
           'title': "Equipamentos",
           'route': Equipamentos.routeName,
-          'widget': const Equipamentos(),
+          'builder': ([Map<String, dynamic>? filtro]) {
+            return Equipamentos(initialFilter: filtro);
+          },
           'icon': Icons.devices,
           'role': 'ROLE_ADMIN',
         },
         {
           'title': "Movimentações",
           'route': Movimentacoes.routeName,
-          'widget': const Movimentacoes(),
+          'builder': ([Map<String, dynamic>? filtro]) {
+            return Movimentacoes(initialFilter: filtro);
+          },
           'icon': Icons.compare_arrows,
           'role': 'ROLE_ADMIN',
         },

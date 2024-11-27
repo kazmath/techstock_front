@@ -5,7 +5,7 @@ import 'service.dart';
 
 class SetorService extends IService {
   @override
-  Future<int> add(Map<String, dynamic> map) async {
+  Future<int?> add(Map<String, dynamic> map) async {
     var response = await apiRequest(
       "${Constants.apiURL}/setor",
       body: map,
@@ -23,11 +23,11 @@ class SetorService extends IService {
 
     var items = responseBody;
 
-    return items!;
+    return items;
   }
 
   @override
-  Future<bool> deletar(int id) async {
+  Future<bool?> deletar(int id) async {
     var response = await apiRequest(
       "${Constants.apiURL}/setor/$id",
       method: 'delete',
@@ -48,7 +48,7 @@ class SetorService extends IService {
   }
 
   @override
-  Future<int> editar(int id, Map<String, dynamic> data) {
+  Future<int?> editar(int id, Map<String, dynamic> data) {
     // TODO: implement editar
     throw UnimplementedError();
   }
@@ -60,7 +60,7 @@ class SetorService extends IService {
   }
 
   @override
-  Future<List<Map<String, dynamic>>> listar({
+  Future<List<Map<String, dynamic>>?> listar({
     Map<String, dynamic>? filtro,
   }) async {
     var response = await apiRequest(

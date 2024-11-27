@@ -70,7 +70,7 @@ class UsuarioService extends IService {
   }
 
   @override
-  Future<int> add(Map<String, dynamic> map) async {
+  Future<int?> add(Map<String, dynamic> map) async {
     var response = await apiRequest(
       "${Constants.apiURL}/usuario",
       body: map,
@@ -88,17 +88,17 @@ class UsuarioService extends IService {
 
     var items = responseBody;
 
-    return items!;
+    return items;
   }
 
   @override
-  Future<bool> deletar(int id) async {
+  Future<bool?> deletar(int id) async {
     var response = await apiRequest(
       "${Constants.apiURL}/usuario/$id",
       method: 'delete',
     );
 
-    bool responseBody;
+    bool? responseBody;
     List<String> responseErrors;
 
     (responseBody, responseErrors) = destructureResponse<bool>(response);
@@ -113,14 +113,14 @@ class UsuarioService extends IService {
   }
 
   @override
-  Future<int> editar(int id, Map<String, dynamic> data) async {
+  Future<int?> editar(int id, Map<String, dynamic> data) async {
     var response = await apiRequest(
       "${Constants.apiURL}/usuario/$id",
       method: 'put',
       body: data,
     );
 
-    int responseBody;
+    int? responseBody;
     List<String> responseErrors;
 
     (responseBody, responseErrors) = destructureResponse<int>(response);
@@ -135,7 +135,7 @@ class UsuarioService extends IService {
   }
 
   @override
-  Future<Map<String, dynamic>> get(int id) async {
+  Future<Map<String, dynamic>?> get(int id) async {
     var response = await apiRequest(
       "${Constants.apiURL}/usuario/$id",
       method: 'get',
@@ -161,7 +161,7 @@ class UsuarioService extends IService {
   String get permissionName => throw UnimplementedError();
 
   @override
-  Future<List<Map<String, dynamic>>> listar({
+  Future<List<Map<String, dynamic>>?> listar({
     Map<String, dynamic>? filtro,
   }) async {
     var response = await apiRequest(

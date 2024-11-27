@@ -5,15 +5,46 @@ import 'service.dart';
 
 class CategoriaService extends IService {
   @override
-  Future<int> add(Map<String, dynamic> map) {
-    // TODO: implement add
-    throw UnimplementedError();
+  Future<int?> add(Map<String, dynamic> map) async {
+    var response = await apiRequest(
+      "${Constants.apiURL}/categoria",
+      body: map,
+    );
+
+    int? responseBody;
+    List<String> responseErrors;
+
+    (responseBody, responseErrors) =
+        destructureResponse<Map<String, dynamic>>(response);
+
+    if (responseErrors.isNotEmpty) {
+      throw ServiceException(responseErrors.join(","));
+    }
+
+    var items = responseBody;
+
+    return items;
   }
 
   @override
-  Future<bool> deletar(int id) {
-    // TODO: implement deletar
-    throw UnimplementedError();
+  Future<bool?> deletar(int id) async {
+    var response = await apiRequest(
+      "${Constants.apiURL}/categoria/$id",
+      method: 'delete',
+    );
+
+    bool responseBody;
+    List<String> responseErrors;
+
+    (responseBody, responseErrors) = destructureResponse<bool>(response);
+
+    if (responseErrors.isNotEmpty) {
+      throw ServiceException(responseErrors.join(","));
+    }
+
+    var item = responseBody;
+
+    return item;
   }
 
   @override
@@ -29,7 +60,7 @@ class CategoriaService extends IService {
   }
 
   @override
-  Future<List<Map<String, dynamic>>> listar({
+  Future<List<Map<String, dynamic>>?> listar({
     Map<String, dynamic>? filtro,
   }) async {
     var response = await apiRequest(

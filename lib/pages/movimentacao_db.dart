@@ -11,7 +11,9 @@ import '../tools/utils.dart';
 import 'widgets.dart';
 
 class Movimentacoes extends StatefulWidget {
-  const Movimentacoes({super.key});
+  const Movimentacoes({super.key, this.initialFilter});
+
+  final Map<String, dynamic>? initialFilter;
 
   static String get routeName => "${Constants.baseHrefStripped}/movimentacao";
 

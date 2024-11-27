@@ -11,7 +11,9 @@ import '../tools/utils.dart';
 import 'widgets.dart';
 
 class TicketsAdmin extends StatefulWidget {
-  const TicketsAdmin({super.key});
+  const TicketsAdmin({super.key, this.initialFilter});
+
+  final Map<String, dynamic>? initialFilter;
 
   static String get routeName => "${Constants.baseHrefStripped}/home";
 
@@ -150,28 +152,18 @@ class _TicketsAdminState extends State<TicketsAdmin> {
                 'label': "Status",
                 'controller': statusController,
                 'value_converter': (value) {
-                  return value?.value;
+                  return statusController.value = value;
                 },
-                'widget': FormField(
-                  builder: (state) {
-                    listaStatuses;
-                    return DropdownMenu(
-                      onSelected: (value) {},
-                      expandedInsets: EdgeInsets.zero,
-                      dropdownMenuEntries: [
-                        const DropdownMenuEntry(
-                          value: null,
-                          label: "",
-                        ),
-                        ...?listaStatuses?.map(
-                          (e) => DropdownMenuEntry<String?>(
-                            value: e['codigo'],
-                            label: e['descricao'],
-                          ),
-                        ),
-                      ],
-                    );
-                  },
+                'widget': DropdownFormField(
+                  list: [
+                    ...?listaStatuses?.map(
+                      (e) => DropdownMenuEntry<String?>(
+                        value: e['codigo'],
+                        label: e['descricao'],
+                      ),
+                    ),
+                  ],
+                  controller: statusController,
                 ),
               },
               // {
@@ -200,28 +192,18 @@ class _TicketsAdminState extends State<TicketsAdmin> {
                 'label': "Categoria",
                 'controller': categoriaIdController,
                 'value_converter': (value) {
-                  return value?.value;
+                  return categoriaIdController.value = value;
                 },
-                'widget': FormField(
-                  builder: (state) {
-                    listaCategorias;
-                    return DropdownMenu(
-                      expandedInsets: EdgeInsets.zero,
-                      enableFilter: true,
-                      dropdownMenuEntries: [
-                        const DropdownMenuEntry(
-                          value: null,
-                          label: "",
-                        ),
-                        ...?listaCategorias?.map(
-                          (e) => DropdownMenuEntry<int>(
-                            value: e['id'],
-                            label: e['nome'],
-                          ),
-                        ),
-                      ],
-                    );
-                  },
+                'widget': DropdownFormField(
+                  list: [
+                    ...?listaCategorias?.map(
+                      (e) => DropdownMenuEntry<int>(
+                        value: e['id'],
+                        label: e['nome'],
+                      ),
+                    ),
+                  ],
+                  controller: categoriaIdController,
                 ),
               },
             ],
@@ -281,7 +263,7 @@ class _TicketsAdminState extends State<TicketsAdmin> {
                 'type': PlutoColumnType.text(),
               },
               'dt_reserva': {
-                'title': "Data",
+                'title': "Data da Reserva",
                 'type': PlutoColumnType.text(),
               },
               'observacao': {

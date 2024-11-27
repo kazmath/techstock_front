@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:pluto_grid/pluto_grid.dart';
 import 'package:techstock_front/pages/usuario_dialog.dart';
 import 'package:techstock_front/pages/widgets.dart';
+import 'package:techstock_front/tools/exceptions.dart';
 import 'package:techstock_front/tools/utils.dart';
 
 import '../service/setor_service.dart';
@@ -11,7 +12,9 @@ import '../service/usuario_service.dart';
 import '../tools/constants.dart';
 
 class Usuarios extends StatefulWidget {
-  const Usuarios({super.key});
+  const Usuarios({super.key, this.initialFilter});
+
+  final Map<String, dynamic>? initialFilter;
   static String get routeName => "${Constants.baseHrefStripped}/usuarios";
 
   @override
@@ -28,7 +31,11 @@ class _UsuariosState extends State<Usuarios> {
   @override
   void initState() {
     super.initState();
-    SetorService().listar().then(
+    refreshTela();
+  }
+
+  Future<void> refreshTela() async {
+    await SetorService().listar().then(
       (value) {
         setState(() {
           listaSetores = value;
@@ -59,11 +66,31 @@ class _UsuariosState extends State<Usuarios> {
             service: UsuarioService(),
             filtro: filtro,
             onAdd: (controller) async {
-              var result = await showDialog<Map<String, dynamic>>(
-                context: context,
-                builder: (context) => AddEditUsuario(),
-              );
-              if (result != null) setState(() {});
+              try {
+                var result = await showDialog<Map<String, dynamic>>(
+                  context: context,
+                  builder: (context) => AddEditUsuario(),
+                );
+                if (result != null) {
+                  refreshTela();
+                }
+              } on ServiceException catch (e) {
+                showDialog(
+                  context: context,
+                  builder: (context) => AlertOkDialog(
+                    title: Text("Erro"),
+                    content: Text(e.cause),
+                  ),
+                );
+              } catch (e, s) {
+                showDialog(
+                  context: context,
+                  builder: (context) => UnknownErrorDialog(
+                    exception: e,
+                    stacktrace: s,
+                  ),
+                );
+              }
             },
             doSearch: true,
             prefixColumnRenderer: (PlutoColumnRendererContext rendererContext) {
@@ -104,11 +131,12 @@ class _UsuariosState extends State<Usuarios> {
                 'renderer': (rendererContext) {
                   return Center(
                     child: Text(listaSetores
-                        ?.where(
-                          (element) =>
-                              element['id'] == rendererContext.cell.value,
-                        )
-                        .singleOrNull?['nome']),
+                            ?.where(
+                              (element) =>
+                                  element['id'] == rendererContext.cell.value,
+                            )
+                            .singleOrNull?['nome'] ??
+                        "-"),
                   );
                 }
               },
@@ -118,7 +146,7 @@ class _UsuariosState extends State<Usuarios> {
                 'renderer': (rendererContext) {
                   var value = {
                     'ADMIN': "Administrador",
-                    'USER': "Usuário",
+                    'USER': "Professor",
                   };
                   return Center(
                     child: Text(

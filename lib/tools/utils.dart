@@ -325,10 +325,11 @@ Future<Map<String, dynamic>?> apiRequestDialog(
           if (snapshot.hasError) {
             if (snapshot.error is ServiceException) {
               return AlertOkDialog(
-                title: Text("Erro"),
+                title: Text("Aviso"),
                 content: Text(
                   (snapshot.error as ServiceException).cause,
                 ),
+                okReturn: null,
               );
             }
 
@@ -377,6 +378,10 @@ class KeyValueNotifier<K, V>
     _value.remove(s);
     notifyListeners();
   }
+
+  void refresh() {
+    notifyListeners();
+  }
 }
 
 String? stringValidator(String? value) {
@@ -384,4 +389,10 @@ String? stringValidator(String? value) {
     return "Campo não pode estar vazio";
   }
   return null;
+}
+
+class Arguments<T> {
+  final T value;
+
+  Arguments(this.value);
 }

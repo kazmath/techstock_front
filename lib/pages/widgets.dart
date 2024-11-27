@@ -19,7 +19,7 @@ class BaseApp extends StatelessWidget {
     this.leading,
     this.appBarTitle,
     this.titleAlignment,
-    this.scaffoldKey,
+    required this.scaffoldKey,
     this.endDrawer,
   });
 
@@ -29,7 +29,7 @@ class BaseApp extends StatelessWidget {
   final Widget? appBarTitle;
   final AlignmentGeometry? titleAlignment;
 
-  final Key? scaffoldKey;
+  final GlobalKey<ScaffoldState>? scaffoldKey;
   final Widget? endDrawer;
 
   @override
@@ -90,11 +90,13 @@ class BaseAppWithAuthCheck extends StatelessWidget {
   final Widget? leading;
   final AlignmentGeometry? titleAlignment;
 
-  final Key? scaffoldKey;
+  final GlobalKey<ScaffoldState>? scaffoldKey;
   final Widget? endDrawer;
 
   @override
   Widget build(BuildContext context) {
+    final scaffoldKey = this.scaffoldKey ?? GlobalKey<ScaffoldState>();
+
     return FutureBuilder(
       future: TicketService().listar(),
       builder: (context, snapshot) {
@@ -256,7 +258,8 @@ class GlobalDrawer extends StatelessWidget {
                                           hoverColor: hovering
                                               ? getColorScheme(context).primary
                                               : getColorScheme(context).surface,
-                                          onTap: () => Navigator.pushNamed(
+                                          onTap: () =>
+                                              Navigator.pushReplacementNamed(
                                             context,
                                             e['route'],
                                           ),
@@ -364,7 +367,7 @@ class BaseDatabaseWidget extends StatelessWidget {
   final KeyValueNotifier<String, dynamic>? filtro;
   final List<Map<String, dynamic>>? filtroFields;
 
-  final scaffoldKey;
+  final GlobalKey<ScaffoldState>? scaffoldKey;
 
   void onSearch(TextEditingController controller) {
     filtro?['query'] = controller.text;
@@ -372,11 +375,9 @@ class BaseDatabaseWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    TextEditingController searchController =
-        this.searchController ?? TextEditingController();
-    GlobalKey<ScaffoldState> scaffoldKey =
-        this.scaffoldKey ?? GlobalKey<ScaffoldState>();
-    GlobalKey<FormState> formKey = GlobalKey<FormState>();
+    final searchController = this.searchController ?? TextEditingController();
+    final scaffoldKey = this.scaffoldKey ?? GlobalKey<ScaffoldState>();
+    final formKey = GlobalKey<FormState>();
 
     var mapFields = <String,
         (
@@ -732,12 +733,15 @@ class AlertOkDialog extends StatelessWidget {
 
   final String okString;
 
+  final Object? okReturn;
+
   const AlertOkDialog({
     super.key,
     this.title,
     this.content,
     this.insetPadding,
     this.okString = "OK",
+    this.okReturn = true,
   });
 
   @override
@@ -750,7 +754,7 @@ class AlertOkDialog extends StatelessWidget {
       actions: [
         TextButton(
           onPressed: () {
-            Navigator.pop(context, true);
+            Navigator.pop(context, okReturn);
           },
           child: Text(okString),
         )
@@ -840,6 +844,7 @@ class UnknownErrorDialog extends StatelessWidget {
           ),
         ),
       ),
+      okReturn: null,
     );
   }
 }
@@ -902,6 +907,7 @@ class _BaseAddEditDialogState extends State<BaseAddEditDialog> {
     final fontSize = textTheme.bodyMedium!.fontSize!;
 
     return BaseApp(
+      scaffoldKey: null,
       child: Center(
         child: Container(
           padding: const EdgeInsets.all(30.0),
@@ -1175,6 +1181,7 @@ class DateFormField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     var formField = FormField<DateTime>(
+      initialValue: dataController.value,
       validator: validator ??
           (value) {
             if (value == null) {
@@ -1192,22 +1199,31 @@ class DateFormField extends StatelessWidget {
             border: OutlineInputBorder(),
             errorText: state.errorText,
             errorMaxLines: 2,
-            suffixIcon: IconButton(
-              onPressed: () => showDatePicker(
-                locale: const Locale('pt'),
-                context: context,
-                firstDate: DateTime.now(),
-                lastDate: DateTime.now().add(
-                  Duration(days: 1000),
+            suffixIcon: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  onPressed: () => state.didChange(dataController.value = null),
+                  icon: Icon(Icons.close),
                 ),
-                initialDate: state.value,
-              ).then(
-                (value) {
-                  if (value == null) return;
-                  state.didChange(value);
-                },
-              ),
-              icon: Icon(Icons.calendar_today),
+                IconButton(
+                  onPressed: () => showDatePicker(
+                    locale: const Locale('pt'),
+                    context: context,
+                    firstDate: DateTime.now(),
+                    lastDate: DateTime.now().add(
+                      Duration(days: 1000),
+                    ),
+                    initialDate: state.value,
+                  ).then(
+                    (value) {
+                      if (value == null) return;
+                      state.didChange(value);
+                    },
+                  ),
+                  icon: Icon(Icons.calendar_today),
+                ),
+              ],
             ),
           ),
           child: Text(
@@ -1231,5 +1247,64 @@ class DateFormField extends StatelessWidget {
       );
     }
     return formField;
+  }
+}
+
+class DropdownFormField<T> extends StatelessWidget {
+  const DropdownFormField({
+    super.key,
+    required this.list,
+    required this.controller,
+    this.validator,
+    this.decorationTheme,
+    this.label,
+    this.initialValue,
+  });
+
+  final List<DropdownMenuEntry<T?>>? list;
+
+  final ValueNotifier<T?> controller;
+
+  final String? Function(T? value)? validator;
+
+  final InputDecorationTheme? decorationTheme;
+
+  final Widget? label;
+
+  final T? initialValue;
+
+  @override
+  Widget build(BuildContext context) {
+    assert(validator == null && label == null);
+
+    return FormField<T?>(
+      builder: (state) {
+        return DropdownMenu<T?>(
+          initialSelection: controller.value,
+          expandedInsets: EdgeInsets.zero,
+          inputDecorationTheme: decorationTheme,
+          enableFilter: true,
+          filterCallback: (entries, filter) {
+            return [
+              entries.singleWhere((e) => e.value == null),
+              ...entries.where((element) {
+                if (element.value == null) return false;
+                return element.label.contains(filter);
+              })
+            ];
+          },
+          onSelected: (value) {
+            controller.value = value;
+          },
+          dropdownMenuEntries: [
+            const DropdownMenuEntry(
+              value: null,
+              label: "",
+            ),
+            ...?list,
+          ],
+        );
+      },
+    );
   }
 }

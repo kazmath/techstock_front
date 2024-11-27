@@ -29,7 +29,7 @@ class MovimentacaoService extends IService {
   }
 
   @override
-  Future<List<Map<String, dynamic>>> listar({
+  Future<List<Map<String, dynamic>>?> listar({
     Map<String, dynamic>? filtro,
   }) async {
     var response = await apiRequest(
@@ -53,7 +53,7 @@ class MovimentacaoService extends IService {
     return items;
   }
 
-  Future<List<Map<String, dynamic>>> listarTipos() async {
+  Future<List<Map<String, dynamic>>?> listarTipos() async {
     var response = await apiRequest(
       "${Constants.apiURL}/movimentacao/tipos",
       method: 'get',

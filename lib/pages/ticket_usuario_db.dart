@@ -11,7 +11,9 @@ import 'ticket_usuario_dialog.dart';
 import 'widgets.dart';
 
 class TicketsUsuario extends StatefulWidget {
-  const TicketsUsuario({super.key});
+  const TicketsUsuario({super.key, this.initialFilter});
+
+  final Map<String, dynamic>? initialFilter;
 
   static String get routeName => "${Constants.baseHrefStripped}/tickets";
 

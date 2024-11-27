@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:techstock_front/service/categoria_service.dart';
 import 'package:techstock_front/service/equipamento_service.dart';
+import 'package:techstock_front/tools/exceptions.dart';
 
 import '../pages/widgets.dart';
 import '../tools/utils.dart';
@@ -106,84 +107,252 @@ class AddEditEquipamento extends StatelessWidget {
               'field_name': 'categoria',
               if (editMap != null) 'defaultText': editMap!['categoriaId'],
               'fieldBuilder': (TextEditingController controller) {
-                return FutureBuilder(
-                  future: CategoriaService().listar(),
-                  builder: (context, snapshot) {
-                    if (!snapshot.hasData) {
-                      return InputDecorator(
-                        decoration: InputDecoration(),
-                        child: LinearProgressIndicator(),
-                      );
-                    }
-                    editMap;
-                    var initialValue = int.tryParse(controller.text);
-                    return FormField<int>(
-                      initialValue: initialValue,
-                      validator: (value) {
-                        if (value == null) {
-                          return "Campo não pode ser vazio";
+                return StatefulBuilder(
+                  builder: (context, setState) {
+                    return FutureBuilder(
+                      future: CategoriaService().listar(),
+                      builder: (context, snapshot) {
+                        if (!snapshot.hasData) {
+                          return InputDecorator(
+                            decoration: InputDecoration(),
+                            child: LinearProgressIndicator(),
+                          );
                         }
-                        return null;
-                      },
-                      builder: (state) {
-                        return InputDecorator(
-                          decoration: InputDecoration(
-                            errorText: state.errorText,
-                            border: InputBorder.none,
-                          ),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: DropdownMenu<int>(
-                                  initialSelection: initialValue,
-                                  errorText: state.errorText,
-                                  inputDecorationTheme: InputDecorationTheme(
-                                    border: OutlineInputBorder(),
-                                    errorStyle: TextStyle(fontSize: 0),
-                                  ),
-                                  expandedInsets: EdgeInsets.only(
-                                    right: 4.0,
-                                  ),
-                                  onSelected: (value) {
-                                    controller.text = value.toString();
-                                    state.didChange(value);
-                                  },
-                                  dropdownMenuEntries: snapshot.data!.map(
-                                    (e) {
-                                      return DropdownMenuEntry(
-                                        value: e['id'] as int,
-                                        label: e['nome'],
-                                      );
-                                    },
-                                  ).toList(),
-                                ),
+                        editMap;
+                        var initialValue = int.tryParse(controller.text);
+                        return FormField<int>(
+                          initialValue: initialValue,
+                          validator: (value) {
+                            if (value == null) {
+                              return "Campo não pode ser vazio";
+                            }
+                            return null;
+                          },
+                          builder: (state) {
+                            return InputDecorator(
+                              decoration: InputDecoration(
+                                errorText: state.errorText,
+                                border: InputBorder.none,
                               ),
-                              IconButton.filled(
-                                style: ButtonStyle(
-                                  backgroundColor: WidgetStatePropertyAll(
-                                    Colors.green,
-                                  ),
-                                  foregroundColor: WidgetStatePropertyAll(
-                                    getContrastColor(Colors.green),
-                                  ),
-                                  iconColor: WidgetStatePropertyAll(
-                                    getContrastColor(Colors.green),
-                                  ),
-                                  shape: WidgetStatePropertyAll(
-                                    RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(
-                                        8.0,
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: DropdownMenu<int>(
+                                      initialSelection: initialValue,
+                                      errorText: state.errorText,
+                                      inputDecorationTheme:
+                                          InputDecorationTheme(
+                                        border: OutlineInputBorder(),
+                                        errorStyle: TextStyle(fontSize: 0),
                                       ),
+                                      expandedInsets: EdgeInsets.only(
+                                        right: 4.0,
+                                      ),
+                                      onSelected: (value) {
+                                        controller.text = value.toString();
+                                        state.didChange(value);
+                                      },
+                                      dropdownMenuEntries: snapshot.data!.map(
+                                        (e) {
+                                          return DropdownMenuEntry(
+                                              value: e['id'] as int,
+                                              label: e['nome'],
+                                              labelWidget: Row(
+                                                children: [
+                                                  Expanded(
+                                                    child: Text.rich(
+                                                      TextSpan(children: [
+                                                        TextSpan(
+                                                          text:
+                                                              e['nome'] + "\n",
+                                                        ),
+                                                        TextSpan(
+                                                          text: e['descricao'],
+                                                          style:
+                                                              Theme.of(context)
+                                                                  .textTheme
+                                                                  .bodySmall!
+                                                                  .copyWith(
+                                                                    color: Colors
+                                                                        .black45,
+                                                                  ),
+                                                        ),
+                                                      ]),
+                                                    ),
+                                                  ),
+                                                  IconButton.filled(
+                                                    style: ButtonStyle(
+                                                      backgroundColor:
+                                                          WidgetStatePropertyAll(
+                                                        getColorScheme(context)
+                                                            .errorContainer,
+                                                      ),
+                                                      foregroundColor:
+                                                          WidgetStatePropertyAll(
+                                                        getColorScheme(context)
+                                                            .onErrorContainer,
+                                                      ),
+                                                      iconColor:
+                                                          WidgetStatePropertyAll(
+                                                        getColorScheme(context)
+                                                            .onErrorContainer,
+                                                      ),
+                                                      shape:
+                                                          WidgetStatePropertyAll(
+                                                        RoundedRectangleBorder(
+                                                          borderRadius:
+                                                              BorderRadius
+                                                                  .circular(
+                                                            8.0,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    onPressed: () async {
+                                                      var categoriaController =
+                                                          TextEditingController();
+                                                      var result =
+                                                          await showDialog<
+                                                              bool>(
+                                                        context: context,
+                                                        builder: (context) =>
+                                                            AlertOkCancelDialog(
+                                                          title: Text(
+                                                              "Excluir Curso"),
+                                                          yesString: "Sim",
+                                                          noString: "Não",
+                                                          content: Text(
+                                                            "Tem certeza que deseja "
+                                                            "remover o curso \"${e['nome']}\"",
+                                                          ),
+                                                        ),
+                                                      );
+
+                                                      if (!(result ?? false)) {
+                                                        return;
+                                                      }
+
+                                                      try {
+                                                        await CategoriaService()
+                                                            .deletar(e['id']);
+                                                      } on ServiceException catch (e) {
+                                                        showDialog(
+                                                          context: context,
+                                                          builder: (context) =>
+                                                              AlertOkDialog(
+                                                            title: Text("Erro"),
+                                                            content:
+                                                                Text(e.cause),
+                                                          ),
+                                                        );
+                                                      }
+
+                                                      setState(() {});
+                                                    },
+                                                    icon: Icon(Icons.remove),
+                                                  ),
+                                                ],
+                                              ));
+                                        },
+                                      ).toList(),
                                     ),
                                   ),
-                                ),
-                                onPressed: () {},
-                                icon: Icon(
-                                  Icons.add,
-                                ),
+                                  IconButton.filled(
+                                    style: ButtonStyle(
+                                      backgroundColor: WidgetStatePropertyAll(
+                                        Colors.green,
+                                      ),
+                                      foregroundColor: WidgetStatePropertyAll(
+                                        getContrastColor(Colors.green),
+                                      ),
+                                      iconColor: WidgetStatePropertyAll(
+                                        getContrastColor(Colors.green),
+                                      ),
+                                      shape: WidgetStatePropertyAll(
+                                        RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            8.0,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    onPressed: () async {
+                                      var categoriaController =
+                                          TextEditingController();
+                                      var descricaoController =
+                                          TextEditingController();
+                                      var result = await showDialog<bool>(
+                                        context: context,
+                                        builder: (context) =>
+                                            AlertOkCancelDialog(
+                                          title: Text("Adicionar Categoria"),
+                                          yesString: "Confirmar",
+                                          content: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                "Nome da Categoria a adicionar:",
+                                                style: Theme.of(context)
+                                                    .textTheme
+                                                    .titleSmall,
+                                              ),
+                                              TextFormField(
+                                                controller: categoriaController,
+                                                validator: stringValidator,
+                                                decoration: InputDecoration(
+                                                  border: OutlineInputBorder(),
+                                                ),
+                                              ),
+                                              Divider(
+                                                color: Colors.transparent,
+                                              ),
+                                              Text(
+                                                "Descrição da Categoria a adicionar:",
+                                                style: Theme.of(context)
+                                                    .textTheme
+                                                    .titleSmall,
+                                              ),
+                                              TextFormField(
+                                                controller: descricaoController,
+                                                validator: stringValidator,
+                                                decoration: InputDecoration(
+                                                  border: OutlineInputBorder(),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      );
+
+                                      if (!(result ?? false)) return;
+
+                                      try {
+                                        await CategoriaService().add({
+                                          'nome': categoriaController.text,
+                                          'descricao': descricaoController.text,
+                                        });
+                                      } on ServiceException catch (e) {
+                                        showDialog(
+                                          context: context,
+                                          builder: (context) => AlertOkDialog(
+                                            title: Text("Erro"),
+                                            content: Text(e.cause),
+                                          ),
+                                        );
+                                      }
+
+                                      setState(() {});
+                                    },
+                                    icon: Icon(
+                                      Icons.add,
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ],
-                          ),
+                            );
+                          },
                         );
                       },
                     );
