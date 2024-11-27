@@ -41,6 +41,7 @@ class BaseApp extends StatelessWidget {
         foregroundColor: getColorScheme(context).onSecondary,
         centerTitle: false,
         leading: leading,
+        actions: [Container()],
         title: ConstrainedBox(
           constraints: BoxConstraints(
             maxHeight: kToolbarHeight,
@@ -94,21 +95,23 @@ class BaseAppWithAuthCheck extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BaseApp(
-      scaffoldKey: scaffoldKey,
-      endDrawer: endDrawer,
-      child: FutureBuilder(
-        future: TicketService().listar(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState != ConnectionState.done) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (snapshot.hasError) {
-            UsuarioService().logout().then((_) => returnToLogin(context));
-            return Container();
-          }
+    return FutureBuilder(
+      future: TicketService().listar(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState != ConnectionState.done) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+        if (snapshot.hasError) {
+          UsuarioService().logout().then((_) => returnToLogin(context));
+          return Container();
+        }
 
-          return Container(
+        return BaseApp(
+          scaffoldKey: scaffoldKey,
+          endDrawer: endDrawer,
+          child: Container(
             margin: const EdgeInsets.all(20.0),
             padding: const EdgeInsets.all(30.0),
             decoration: BoxDecoration(
@@ -156,9 +159,9 @@ class BaseAppWithAuthCheck extends StatelessWidget {
                 ],
               ),
             ),
-          );
-        },
-      ),
+          ),
+        );
+      },
     );
   }
 }
