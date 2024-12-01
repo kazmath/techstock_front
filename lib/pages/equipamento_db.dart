@@ -43,7 +43,11 @@ class _EquipamentosState extends State<Equipamentos> {
     //     filtro.value = args!.value;
     //   }
     // });
-    Future.wait(
+    refresh();
+  }
+
+  Future<void> refresh() {
+    return Future.wait(
       [
         CategoriaService().listar().then(
           (value) {
@@ -91,7 +95,7 @@ class _EquipamentosState extends State<Equipamentos> {
                 context: context,
                 builder: (context) => AddEditEquipamento(),
               );
-              if (result != null) setState(() {});
+              if (result != null) refresh();
             },
             filtro: filtro,
             doSearch: true,

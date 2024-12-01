@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'dashboard.dart';
-import 'ticket_admin_db.dart';
-import 'ticket_usuario_db.dart';
 
 import '../service/usuario_service.dart';
 import '../tools/constants.dart';
 import '../tools/exceptions.dart';
 import '../tools/utils.dart';
+import 'dashboard.dart';
+import 'ticket_usuario_db.dart';
 import 'widgets.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -113,7 +112,7 @@ class _LoginScreenState extends State<LoginScreen> {
     getInputDecoration(String hint, IconData icon) => InputDecoration(
           hintText: hint,
           filled: true,
-          fillColor: getColorScheme(context).surface,
+          fillColor: getColorScheme(context).surfaceContainerHighest,
           border: const OutlineInputBorder(
             borderSide: BorderSide(color: Colors.black26),
           ),
@@ -123,7 +122,7 @@ class _LoginScreenState extends State<LoginScreen> {
               height: 49,
               decoration: BoxDecoration(
                 border: Border.all(color: Colors.black26),
-                color: getColorScheme(context).surfaceContainer,
+                color: getColorScheme(context).surface,
               ),
               child: Icon(icon),
             ),
@@ -159,7 +158,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     minHeight: fontSize * 42,
                     minWidth: fontSize * 40,
                   ),
-                  color: getColorScheme(context).surface,
+                  color: getColorScheme(context).surfaceContainerHighest,
                   padding: const EdgeInsets.all(50.0),
                   child: Form(
                     child: Column(

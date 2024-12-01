@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:pluto_grid/pluto_grid.dart';
-import 'package:techstock_front/theme.dart';
 
 import '../service/service.dart';
 import '../service/ticket_service.dart';
@@ -52,10 +51,10 @@ class BaseApp extends StatelessWidget {
             mainAxisSize: MainAxisSize.max,
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              IconButton(
-                onPressed: () {},
-                icon: const Icon(Icons.notifications),
-              ),
+              // IconButton(
+              //   onPressed: () {},
+              //   icon: const Icon(Icons.notifications),
+              // ),
               const VerticalDivider(color: Colors.transparent),
               Padding(
                 padding: const EdgeInsets.all(4.0),
@@ -177,6 +176,7 @@ class GlobalDrawer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Drawer(
+      backgroundColor: getColorScheme(context).surfaceContainerHighest,
       child: Padding(
         padding: const EdgeInsets.all(15.0),
         child: Column(
@@ -242,7 +242,7 @@ class GlobalDrawer extends StatelessWidget {
                                             style: TextStyle(
                                               color: hovering
                                                   ? getColorScheme(context)
-                                                      .onPrimary
+                                                      .onSecondary
                                                   : getColorScheme(context)
                                                       .onSurface,
                                             ),
@@ -257,7 +257,8 @@ class GlobalDrawer extends StatelessWidget {
                                           ),
                                           style: ListTileStyle.drawer,
                                           hoverColor: hovering
-                                              ? getColorScheme(context).primary
+                                              ? getColorScheme(context)
+                                                  .secondary
                                               : getColorScheme(context).surface,
                                           onTap: () =>
                                               Navigator.pushReplacementNamed(
@@ -346,6 +347,7 @@ class BaseDatabaseWidget extends StatelessWidget {
     this.prefixColumnWidth,
     this.filtro,
     this.filtroFields,
+    this.defaultFilter,
     this.scaffoldKey,
   });
 
@@ -367,6 +369,7 @@ class BaseDatabaseWidget extends StatelessWidget {
 
   final KeyValueNotifier<String, dynamic>? filtro;
   final List<Map<String, dynamic>>? filtroFields;
+  final Map<String, dynamic>? defaultFilter;
 
   final GlobalKey<ScaffoldState>? scaffoldKey;
 
@@ -395,6 +398,7 @@ class BaseDatabaseWidget extends StatelessWidget {
       endDrawer: [filtro, filtroFields].contains(null)
           ? null
           : Drawer(
+              backgroundColor: getColorScheme(context).surfaceContainerHighest,
               child: Padding(
                 padding: const EdgeInsets.all(30.0),
                 child: Column(
@@ -501,10 +505,7 @@ class BaseDatabaseWidget extends StatelessWidget {
                                 ),
                               ),
                               backgroundColor: WidgetStatePropertyAll(
-                                getColorScheme(context).primary,
-                              ),
-                              foregroundColor: WidgetStatePropertyAll(
-                                getColorScheme(context).onPrimary,
+                                getColorScheme(context).secondary,
                               ),
                             ),
                             child: const Text("Filtrar"),
@@ -522,10 +523,10 @@ class BaseDatabaseWidget extends StatelessWidget {
                                 ),
                               ),
                               backgroundColor: WidgetStatePropertyAll(
-                                getColorScheme(context).surfaceContainerHighest,
+                                getColorScheme(context).tertiary,
                               ),
                               foregroundColor: WidgetStatePropertyAll(
-                                getColorScheme(context).onSurfaceVariant,
+                                getColorScheme(context).onTertiary,
                               ),
                             ),
                           ),
@@ -546,6 +547,9 @@ class BaseDatabaseWidget extends StatelessWidget {
               onPressed: () => scaffoldKey.currentState?.openEndDrawer(),
               icon: const Icon(Icons.filter_alt),
               style: ButtonStyle(
+                backgroundColor: WidgetStatePropertyAll(
+                  Color(0xFF6B737C),
+                ),
                 shape: WidgetStatePropertyAll(
                   RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8.0),
@@ -562,12 +566,16 @@ class BaseDatabaseWidget extends StatelessWidget {
               decoration: InputDecoration(
                 filled: true,
                 hintText: "Pesquisar...",
+                fillColor: Color(0xFFE1E5EB),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8.0),
                   borderSide: BorderSide.none,
                 ),
                 suffixIcon: FilledButton(
                   style: ButtonStyle(
+                    backgroundColor: WidgetStatePropertyAll(
+                      Color(0xFF6B737C),
+                    ),
                     shape: WidgetStatePropertyAll(
                       RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8.0),
@@ -603,8 +611,14 @@ class BaseDatabaseWidget extends StatelessWidget {
       child: ListenableBuilder(
         listenable: Listenable.merge([filtro]),
         builder: (context, _) {
+          Map<String, dynamic>? fullFiltro = {
+            ...filtro?.value ?? {},
+            ...defaultFilter ?? {},
+          };
+          if (fullFiltro.isEmpty) fullFiltro = null;
+
           return FutureBuilder(
-            future: service.listar(filtro: filtro?.value),
+            future: service.listar(filtro: fullFiltro),
             builder: (context, snapshot) {
               if (snapshot.connectionState != ConnectionState.done) {
                 return const Center(
@@ -832,12 +846,12 @@ class UnknownErrorDialog extends StatelessWidget {
                 "$message (${exception.runtimeType})",
               ),
               Container(
-                color: Theme.of(context).colorScheme.secondaryContainer,
+                color: Theme.of(context).colorScheme.surfaceContainerHighest,
                 padding: const EdgeInsets.all(8.0),
                 child: Text(
                   stacktrace.toString(),
                   style: TextStyle(
-                    color: Theme.of(context).colorScheme.onSecondaryContainer,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
               ),
@@ -1136,11 +1150,10 @@ class _BaseAddEditDialogState extends State<BaseAddEditDialog> {
                             ),
                           ),
                           backgroundColor: WidgetStatePropertyAll(
-                            CustomMaterialTheme.salvarAprovado.value,
+                            Color(0xFF4CAF50),
                           ),
                           foregroundColor: WidgetStatePropertyAll(
-                            CustomMaterialTheme
-                                .salvarAprovado.light.onColorContainer,
+                            Color(0xFFFFFFFF),
                           ),
                         ),
                         child: widget.confirmButtonLabel ??

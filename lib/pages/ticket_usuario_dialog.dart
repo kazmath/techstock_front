@@ -7,7 +7,6 @@ import 'package:intl/intl.dart';
 import 'package:techstock_front/service/categoria_service.dart';
 import 'package:techstock_front/service/equipamento_service.dart';
 import 'package:techstock_front/service/ticket_service.dart';
-import 'package:techstock_front/theme.dart';
 import 'package:techstock_front/tools/utils.dart';
 
 import '../pages/widgets.dart';
@@ -34,37 +33,76 @@ class _AddTicketState extends State<AddTicket> {
 
   final scaffoldKey = GlobalKey<ScaffoldState>();
 
-  Map<String, dynamic>? evaluateResults() {
+  Future<Map<String, dynamic>?> evaluateResults() async {
     if (formKey.currentState?.validate() != true) return null;
+    if (equipamentoFieldGroups.isEmpty) return null;
     var temp = equipamentoFieldGroups.values.map(
       (e) {
         return {
           'equipamentoId': e.$2.value!,
           'dt_reserva': DateFormat("yyyy-MM-dd").format(e.$3.value!),
-          'observacao': observacaoController.text,
         };
       },
     ).toList();
-    Future.wait(
-      temp.map(
-        (e) => TicketService().add(e),
+    temp[0]['observacao'] = observacaoController.text;
+
+    List<int?>? resultAPI = await apiRequestDialog(
+      context,
+      Future.wait(
+        temp.map(
+          (e) => TicketService().add(e),
+        ),
       ),
-    ).then(
-      (value) {
-        WidgetsBinding.instance.addPostFrameCallback(
-          (_) {
-            Navigator.pop(context, value);
-            showDialog(
-              context: context,
-              builder: (context) => AlertOkDialog(
-                title: Text("Sucesso"),
-                content: Text("Reservas feitas com sucesso"),
-              ),
-            );
-          },
+    );
+
+    if (resultAPI == null) return null;
+
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) {
+        Navigator.pop(context, resultAPI);
+        showDialog(
+          context: context,
+          builder: (context) => AlertOkDialog(
+            title: Text("Sucesso"),
+            content: Text("Reservas feitas com sucesso"),
+          ),
         );
       },
     );
+    // Future.wait(
+    //   temp.map(
+    //     (e) => TicketService().add(e),
+    //   ),
+    // ).then(
+    //   (value) {
+    //     WidgetsBinding.instance.addPostFrameCallback(
+    //       (_) {
+    //         Navigator.pop(context, value);
+    //         showDialog(
+    //           context: context,
+    //           builder: (context) => AlertOkDialog(
+    //             title: Text("Sucesso"),
+    //             content: Text("Reservas feitas com sucesso"),
+    //           ),
+    //         );
+    //       },
+    //     );
+    //   },
+    //   onError: (error, stackTrace) {
+    //     WidgetsBinding.instance.addPostFrameCallback(
+    //       (_) {
+    //         Navigator.pop(context);
+    //         showDialog(
+    //           context: context,
+    //           builder: (context) => AlertOkDialog(
+    //             title: Text("Sucesso"),
+    //             content: Text("Reservas não foram feitas"),
+    //           ),
+    //         );
+    //       },
+    //     );
+    //   },
+    // );
   }
 
   @override
@@ -185,11 +223,10 @@ class _AddTicketState extends State<AddTicket> {
                           onPressed: evaluateResults,
                           style: ButtonStyle(
                             backgroundColor: WidgetStatePropertyAll(
-                              CustomMaterialTheme.salvarAprovado.value,
+                              Color(0xFF4CAF50),
                             ),
                             foregroundColor: WidgetStatePropertyAll(
-                              CustomMaterialTheme
-                                  .salvarAprovado.light.onColorContainer,
+                              Color(0xFFFFFFFF),
                             ),
                             padding: WidgetStatePropertyAll(
                               EdgeInsets.all(15.0),
@@ -260,7 +297,7 @@ class _AddTicketState extends State<AddTicket> {
                 ),
                 Expanded(
                   child: FormField<int>(
-                    initialValue: listaCategorias.first['id'] as int,
+                    initialValue: listaCategorias.firstOrNull?['id'] as int?,
                     builder: (state) {
                       WidgetsBinding.instance.addPostFrameCallback(
                         (_) => categoriaController.value = state.value,
@@ -274,7 +311,7 @@ class _AddTicketState extends State<AddTicket> {
                           ),
                           DropdownMenu<int>(
                             initialSelection:
-                                listaCategorias.first['id'] as int,
+                                listaCategorias.firstOrNull?['id'] as int?,
                             expandedInsets:
                                 EdgeInsets.all(8.0).copyWith(left: 0),
                             onSelected: (value) => state.didChange(value),

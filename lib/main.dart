@@ -43,58 +43,27 @@ class Main extends StatelessWidget {
       ],
 
       // theme: brightness == Brightness.light ? theme.light() : theme.dark(),
-      theme: theme.light(),
-      // darkTheme: ThemeData(
-      //   colorScheme: const ColorScheme(
-      //     brightness: Brightness.dark,
-      //     primary: Color(0xffb0c6ff),
-      //     surfaceTint: Color(0xffb0c6ff),
-      //     onPrimary: Color(0xff152e60),
-      //     primaryContainer: Color(0xff2e4578),
-      //     onPrimaryContainer: Color(0xffd9e2ff),
-      //     secondary: Color(0xffa4c9fe),
-      //     onSecondary: Color(0xff00315c),
-      //     secondaryContainer: Color(0xff1f4876),
-      //     onSecondaryContainer: Color(0xffd3e3ff),
-      //     tertiary: Color(0xff82d3e0),
-      //     onTertiary: Color(0xff00363d),
-      //     tertiaryContainer: Color(0xff004f58),
-      //     onTertiaryContainer: Color(0xff9eeffd),
-      //     error: Color(0xffffb3b5),
-      //     onError: Color(0xff561d22),
-      //     errorContainer: Color(0xff733337),
-      //     onErrorContainer: Color(0xffffdada),
-      //     surface: Color(0xFFD6D6D6),
-      //     onSurface: Color(0xffdee3e5),
-      //     onSurfaceVariant: Color(0xffffffff),
-      //     outline: Color(0xff899294),
-      //     outlineVariant: Color(0xff3f484a),
-      //     shadow: Color(0xff000000),
-      //     scrim: Color(0xff000000),
-      //     inverseSurface: Color(0xffdee3e5),
-      //     inversePrimary: Color(0xff475d92),
-      //     primaryFixed: Color(0xffd9e2ff),
-      //     onPrimaryFixed: Color(0xff001945),
-      //     primaryFixedDim: Color(0xffb0c6ff),
-      //     onPrimaryFixedVariant: Color(0xff2e4578),
-      //     secondaryFixed: Color(0xffd3e3ff),
-      //     onSecondaryFixed: Color(0xff001c39),
-      //     secondaryFixedDim: Color(0xffa4c9fe),
-      //     onSecondaryFixedVariant: Color(0xff1f4876),
-      //     tertiaryFixed: Color(0xff9eeffd),
-      //     onTertiaryFixed: Color(0xff001f24),
-      //     tertiaryFixedDim: Color(0xff82d3e0),
-      //     onTertiaryFixedVariant: Color(0xff004f58),
-      //     surfaceDim: Color(0xff0e1415),
-      //     surfaceBright: Color(0xff343a3b),
-      //     surfaceContainerLowest: Color(0xff090f10),
-      //     surfaceContainerLow: Color(0xff171d1e),
-      //     surfaceContainer: Color(0xff1b2122),
-      //     surfaceContainerHigh: Color(0xff252b2c),
-      //     surfaceContainerHighest: Color(0xff303637),
-      //   ),
-      //   useMaterial3: true,
-      // ),
+      theme: ThemeData(
+        useMaterial3: true,
+        colorScheme: const ColorScheme(
+          brightness: Brightness.light,
+          primary: Color(0xFF0D6EFD), // Cor dos botões
+          onPrimary: Color(0xFFFFFFFF), // texto na cor dos botões
+          secondary: Color(0xFF182B43), // Azul escuro
+          onSecondary: Color(0xFFFFFFFF), // texto no Azul escuro
+          tertiary: Color(0xFFEDEDED), // Botão de voltar
+          onTertiary: Color(0xFF898989), // texto no Botão de voltar
+          error: Color(0xFFFD3F3F), // Botão de erro
+          onError: Color(0xFFFFFFFF), // texto no Botão de erro
+          surface: Color(0xFFE4E7EC), // Cor do fundo
+          onSurface: Color(0xFF000000), // texto na cor do fundo
+          surfaceContainer: Color(0xFFF8F8FA),
+          surfaceContainerHighest:
+              Color(0xFFFFFFFF), // Cor do fundo alternativo
+          onSurfaceVariant:
+              Color(0xFF182B43), // texto na cor do fundo alternativo
+        ),
+      ),
       themeMode: ThemeMode.light, // TODO: dark theme
 
       initialRoute: Constants.baseHref,

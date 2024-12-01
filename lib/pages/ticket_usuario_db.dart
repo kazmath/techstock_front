@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:pluto_grid/pluto_grid.dart';
+import 'package:techstock_front/service/usuario_service.dart';
 
 import '../service/categoria_service.dart';
 import '../service/equipamento_service.dart';
@@ -25,10 +26,16 @@ class _TicketsUsuarioState extends State<TicketsUsuario> {
   List<Map<String, dynamic>>? listaEquipamentos;
   List<Map<String, dynamic>>? listaCategorias;
   List<Map<String, dynamic>>? listaStatuses;
+  UsuarioDTO? usuarioDTO;
 
   List<Object?> errors = List.empty(growable: true);
 
-  Map<String, dynamic> filtro = {};
+  var filtro = KeyValueNotifier<String, dynamic>({});
+  var dataController = ValueNotifier<DateTime?>(null);
+  var dataController2 = ValueNotifier<DateTime?>(null);
+  var statusController = ValueNotifier<String?>(null);
+  var usuarioIdController = ValueNotifier<int?>(null);
+  var categoriaIdController = ValueNotifier<int?>(null);
 
   @override
   void initState() {
@@ -65,6 +72,9 @@ class _TicketsUsuarioState extends State<TicketsUsuario> {
             errors.add(error);
           },
         ),
+        UsuarioService.usuario.then(
+          (value) => usuarioDTO = value,
+        ),
       ],
     ).then(
       (value) => setState(() {}),
@@ -87,24 +97,128 @@ class _TicketsUsuarioState extends State<TicketsUsuario> {
         : BaseDatabaseWidget(
             title: "Reservas",
             service: TicketService(),
+            filtro: filtro,
+            defaultFilter: {
+              'usuarioId': usuarioDTO!.id!,
+            },
+            filtroFields: [
+              {
+                'field': "dt_reserva_begin",
+                'label': "Data de Início",
+                'controller': dataController,
+                'widget': DateFormField(
+                  validator: (value) {
+                    var other = dataController2.value;
+                    if (other != null && (value?.isAfter(other) ?? false)) {
+                      return "Não pode ser depois de data final";
+                    }
+                    return null;
+                  },
+                  dataController: dataController,
+                ),
+                'value_converter': (value) {
+                  return value != null
+                      ? Constants.apiDateFormat.format(value)
+                      : null;
+                }
+              },
+              {
+                'field': "dt_reserva_end",
+                'label': "Data de Fim",
+                'controller': dataController2,
+                'widget': DateFormField(
+                  validator: (value) {
+                    var other = dataController.value;
+                    if (other != null && (value?.isBefore(other) ?? false)) {
+                      return "Não pode ser antes de data inicial";
+                    }
+                    return null;
+                  },
+                  dataController: dataController2,
+                ),
+                'value_converter': (value) {
+                  return value != null
+                      ? Constants.apiDateFormat.format(value)
+                      : null;
+                }
+              },
+              {
+                'field': 'status',
+                'label': "Status",
+                'controller': statusController,
+                'value_converter': (value) {
+                  return statusController.value = value;
+                },
+                'widget': DropdownFormField(
+                  list: [
+                    ...?listaStatuses?.map(
+                      (e) => DropdownMenuEntry<String?>(
+                        value: e['codigo'],
+                        label: e['descricao'],
+                      ),
+                    ),
+                  ],
+                  controller: statusController,
+                ),
+              },
+              // {
+              //   'field': 'usuarioId',
+              //   'label': "usuarioId",
+              //   'controller': usuarioIdController,
+              //   'widget': FormField(
+              //     builder: (state) {
+              //       listaUsuarios;
+              //       return DropdownMenu(
+              //         expandedInsets: EdgeInsets.zero,
+              //         dropdownMenuEntries: [
+              //           ...?listaUsuarios?.map(
+              //             (e) => DropdownMenuEntry<int>(
+              //               value: e['id'],
+              //               label: e['nome'],
+              //             ),
+              //           ),
+              //         ],
+              //       );
+              //     },
+              //   ),
+              // },
+              {
+                'field': 'categoriaId',
+                'label': "Categoria",
+                'controller': categoriaIdController,
+                'value_converter': (value) {
+                  return categoriaIdController.value = value;
+                },
+                'widget': DropdownFormField(
+                  list: [
+                    ...?listaCategorias?.map(
+                      (e) => DropdownMenuEntry<int>(
+                        value: e['id'],
+                        label: e['nome'],
+                      ),
+                    ),
+                  ],
+                  controller: categoriaIdController,
+                ),
+              },
+            ],
             onAdd: (rows) async {
-              listaEquipamentos;
               var equipamentosDisponiveis = listaEquipamentos
                   ?.where(
                     (element) => element['status'] == 'D',
                   )
                   .toList();
 
-              // if (equipamentosDisponiveis?.isEmpty ?? true) {
-              //   await showDialog(
-              //     context: context,
-              //     builder: (context) => const AlertOkDialog(
-              //       title: Text("Aviso"),
-              //       content: Text("Nenhum equipamento disponível"),
-              //     ),
-              //   );
-              //   return;
-              // }
+              if (equipamentosDisponiveis?.isEmpty ?? true) {
+                await showDialog(
+                  context: context,
+                  builder: (context) => const AlertOkDialog(
+                    title: Text("Aviso"),
+                    content: Text("Nenhum equipamento disponível"),
+                  ),
+                );
+                return;
+              }
 
               var reservasFeitasHoje = rows?.where(
                 (row) {
@@ -134,16 +248,16 @@ class _TicketsUsuarioState extends State<TicketsUsuario> {
                 },
               ).toList();
 
-              // if (equipamentosDisponiveis?.isEmpty ?? true) {
-              //   await showDialog(
-              //     context: context,
-              //     builder: (context) => const AlertOkDialog(
-              //       title: Text("Aviso"),
-              //       content: Text("Não é possível fazer mais reservas hoje"),
-              //     ),
-              //   );
-              //   return;
-              // }
+              if (equipamentosDisponiveis?.isEmpty ?? true) {
+                await showDialog(
+                  context: context,
+                  builder: (context) => const AlertOkDialog(
+                    title: Text("Aviso"),
+                    content: Text("Não é possível fazer mais reservas hoje"),
+                  ),
+                );
+                return;
+              }
 
               var result = await showDialog<List<int?>>(
                 context: context,

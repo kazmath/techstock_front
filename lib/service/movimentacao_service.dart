@@ -38,7 +38,7 @@ class MovimentacaoService extends IService {
       body: filtro,
     );
 
-    List<Map<String, dynamic>> responseBody;
+    List<Map<String, dynamic>>? responseBody;
     List<String> responseErrors;
 
     (responseBody, responseErrors) =

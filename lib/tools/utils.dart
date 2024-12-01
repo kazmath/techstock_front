@@ -306,11 +306,11 @@ Color getContrastColor(Color color) {
   return luminance > .5 ? Colors.black : Colors.white;
 }
 
-Future<Map<String, dynamic>?> apiRequestDialog(
+Future<T?> apiRequestDialog<T>(
   BuildContext context,
-  Future<Map<String, dynamic>?> future,
+  Future<T?> future,
 ) async {
-  return await showDialog<Map<String, dynamic>>(
+  return await showDialog<T>(
     context: context,
     barrierDismissible: false,
     builder: (context) => PopScope(

@@ -1,6 +1,7 @@
 // ignore_for_file: prefer_const_literals_to_create_immutables, prefer_const_constructors
 
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:techstock_front/service/categoria_service.dart';
 import 'package:techstock_front/service/equipamento_service.dart';
 import 'package:techstock_front/theme.dart';
@@ -83,6 +84,13 @@ class AddEditEquipamento extends StatelessWidget {
             {
               'label': Text("Ano de Fabricacao"),
               'field_name': 'ano_fabricacao',
+              'validator': (String? value) {
+                try {
+                  NumberFormat('yyyy').parse(value!);
+                } catch (_) {
+                  return "Ano inválido";
+                }
+              },
               if (editMap != null) 'defaultText': editMap!['anoFabricacao'],
             },
           ],
@@ -92,6 +100,12 @@ class AddEditEquipamento extends StatelessWidget {
             {
               'label': Text("Especificação do Equipamento"),
               'field_name': 'descricao',
+              'validator': (String? value) {
+                if (value?.isNotEmpty ?? false) {
+                  return stringValidator(value);
+                }
+                return null;
+              },
               if (editMap != null) 'defaultText': editMap!['descricao'],
             },
             {

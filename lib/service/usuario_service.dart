@@ -12,6 +12,7 @@ class UsuarioDTO {
     required this.codigo,
     required this.email,
     required this.permissions,
+    required this.id,
   });
 
   final String? nome;
@@ -19,6 +20,7 @@ class UsuarioDTO {
   final String? codigo;
   final String? email;
   final List<String>? permissions;
+  final int? id;
 
   @override
   operator ==(other) {
@@ -44,6 +46,7 @@ class UsuarioService extends IService {
         codigo: sharedPreferences.getString('codigo'),
         email: sharedPreferences.getString('email'),
         permissions: sharedPreferences.getStringList('permissions'),
+        id: sharedPreferences.getInt('userId'),
       );
     }
     return _usuario;
@@ -230,6 +233,10 @@ class UsuarioService extends IService {
       if (codigo == null) return false;
       sharedPreferences.setString('codigo', codigo);
 
+      int? id = responseBody['userId'];
+      if (id == null) return false;
+      sharedPreferences.setInt('userId', id);
+
       List<String>? permissions = responseBody['permissions'] != null
           ? List.castFrom(responseBody['permissions'])
           : null;
@@ -247,6 +254,7 @@ class UsuarioService extends IService {
     sharedPreferences.remove('email');
     sharedPreferences.remove('codigo');
     sharedPreferences.remove('permissions');
+    sharedPreferences.remove('userId');
 
     _usuario = null;
   }

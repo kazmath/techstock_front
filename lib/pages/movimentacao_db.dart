@@ -115,7 +115,7 @@ class _MovimentacoesState extends State<Movimentacoes> {
                 'renderer': (PlutoColumnRendererContext rendererContext) {
                   return FutureBuilder(
                     future: getEquipamentoObj(
-                      rendererContext.row.cells['id']?.value,
+                      rendererContext.row.cells['equipamentoId']?.value,
                     ),
                     builder: (context, snapshot) {
                       int? categoriaId = snapshot.data?['categoriaId'];
@@ -136,7 +136,7 @@ class _MovimentacoesState extends State<Movimentacoes> {
                 'renderer': (PlutoColumnRendererContext rendererContext) {
                   return FutureBuilder(
                     future: getEquipamentoObj(
-                      rendererContext.row.cells['id']?.value,
+                      rendererContext.row.cells['equipamentoId']?.value,
                     ),
                     builder: (context, snapshot) {
                       return Center(
@@ -225,7 +225,10 @@ class _MovimentacoesState extends State<Movimentacoes> {
       return listaEquipamentosCache[id];
     }
 
-    return await EquipamentoService().get(id);
+    var result = await EquipamentoService().get(id);
+    listaEquipamentosCache[id] = result;
+
+    return result;
   }
 
   Future<Map<String, dynamic>?> getTicketObj(int? id) async {
@@ -235,7 +238,10 @@ class _MovimentacoesState extends State<Movimentacoes> {
       return listaTicketsCache[id];
     }
 
-    return await TicketService().get(id);
+    var result = await TicketService().get(id);
+    listaEquipamentosCache[id] = result;
+
+    return result;
   }
 
   Future<Map<String, dynamic>?> getUsuarioObj(int? id) async {
@@ -245,6 +251,9 @@ class _MovimentacoesState extends State<Movimentacoes> {
       return listaUsuariosCache[id];
     }
 
-    return await UsuarioService().get(id);
+    var result = await UsuarioService().get(id);
+    listaEquipamentosCache[id] = result;
+
+    return result;
   }
 }

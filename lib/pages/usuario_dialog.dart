@@ -1,7 +1,6 @@
 // ignore_for_file: prefer_const_literals_to_create_immutables, prefer_const_constructors
 
 import 'package:flutter/material.dart';
-import 'package:techstock_front/theme.dart';
 import 'package:techstock_front/tools/exceptions.dart';
 
 import '../pages/widgets.dart';
@@ -210,16 +209,13 @@ class AddEditUsuario extends StatelessWidget {
                                   IconButton.filled(
                                     style: ButtonStyle(
                                       backgroundColor: WidgetStatePropertyAll(
-                                        CustomMaterialTheme
-                                            .salvarAprovado.value,
+                                        Color(0xFF4CAF50),
                                       ),
                                       foregroundColor: WidgetStatePropertyAll(
-                                        CustomMaterialTheme.salvarAprovado.light
-                                            .onColorContainer,
+                                        Color(0xFFFFFFFF),
                                       ),
                                       iconColor: WidgetStatePropertyAll(
-                                        CustomMaterialTheme.salvarAprovado.light
-                                            .onColorContainer,
+                                        Color(0xFFFFFFFF),
                                       ),
                                       shape: WidgetStatePropertyAll(
                                         RoundedRectangleBorder(

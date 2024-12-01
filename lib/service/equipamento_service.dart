@@ -97,7 +97,7 @@ class EquipamentoService extends IService {
       method: 'get',
     );
 
-    Map<String, dynamic> responseBody;
+    Map<String, dynamic>? responseBody;
     List<String> responseErrors;
 
     (responseBody, responseErrors) =
